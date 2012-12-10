@@ -1327,7 +1327,7 @@ static struct as3676_platform_led as3676_pdata_leds[] = {
 		.flags = AS3676_FLAG_ALS | AS3676_FLAG_PWM_INIT
 		| AS3676_FLAG_WAIT_RESUME
 			| AS3676_FLAG_DLS,
-		.max_current = 20000,
+		.max_current = 15000,
 		.default_brightness = LED_FULL,
 	},
 	{
