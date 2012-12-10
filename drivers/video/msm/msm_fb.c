@@ -111,7 +111,7 @@ static int msm_fb_mmap(struct fb_info *info, struct vm_area_struct * vma);
 #ifdef MSM_FB_ENABLE_DBGFS
 
 #define MSM_FB_MAX_DBGFS 1024
-#define MAX_BACKLIGHT_BRIGHTNESS 255
+define MAX_BACKLIGHT_BRIGHTNESS 128
 
 int msm_fb_debugfs_file_index;
 struct dentry *msm_fb_debugfs_root;

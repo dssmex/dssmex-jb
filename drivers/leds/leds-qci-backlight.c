@@ -34,7 +34,7 @@ static void qci_backlight_store(struct led_classdev *led_cdev,
 static struct platform_device *bl_pdev;
 static struct led_classdev lcd_backlight = {
 	.name = "lcd-backlight",
-	.brightness = 147,
+	.brightness = 100,
 	.brightness_set = qci_backlight_store,
 };
 
