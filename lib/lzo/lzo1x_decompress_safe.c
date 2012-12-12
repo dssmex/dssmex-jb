@@ -151,6 +151,7 @@ copy_literal_run:
 			m_pos -= 0x4000;
 		}
 		TEST_LB(m_pos);
+	#if defined (CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS)
 		if (op - m_pos >= 8) {
 			unsigned char *oe = op + t;
 			if (likely(HAVE_OP(t + 15))) {
@@ -192,7 +193,8 @@ copy_literal_run:
 match_next:
 		state = next;
 		t = next;
-		if (likely(HAVE_IP(6) && HAVE_OP(4))) {
+#if defined (CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS)
+	if (likely(HAVE_IP(6) && HAVE_OP(4))) {
 			COPY4(op, ip);
 			op += t;
 			ip += t;
