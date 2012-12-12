@@ -64,7 +64,8 @@ int lzo1x_decompress_safe(const unsigned char *in, size_t in_len,
 				}
 				t += 3;
 copy_literal_run:
-				if (likely(HAVE_IP(t + 15) && HAVE_OP(t + 15))) {
+#if defined (CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS)
+	if (likely(HAVE_IP(t + 15) && HAVE_OP(t + 15))) {
 					const unsigned char *ie = ip + t;
 					unsigned char *oe = op + t;
 					do {
@@ -77,7 +78,9 @@ copy_literal_run:
 					} while (ip < ie);
 					ip = ie;
 					op = oe;
-				} else {
+		} else
+	#endif
+			        {
 					NEED_OP(t);
 					NEED_IP(t + 3);
 					do {
@@ -173,7 +176,9 @@ copy_literal_run:
 					*op++ = *m_pos++;
 				} while (op < oe);
 			}
-		} else {
+    		} else
+	#endif
+    		{
 			unsigned char *oe = op + t;
 			NEED_OP(t);
 			op[0] = m_pos[0];
@@ -191,8 +196,10 @@ match_next:
 			COPY4(op, ip);
 			op += t;
 			ip += t;
-		} else {
-			NEED_IP(t + 3);
+   		} else
+	#endif
+    		{
+    			NEED_IP(t + 3);
 			NEED_OP(t);
 			while (t > 0) {
 				*op++ = *ip++;
