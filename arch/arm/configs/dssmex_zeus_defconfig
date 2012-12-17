@@ -5,6 +5,7 @@
 # Linux kernel version: 2.6.32.9
 # Tue Dec 12 17:18:44 2012
 #
+
 CONFIG_ARM=y
 CONFIG_SYS_SUPPORTS_APM_EMULATION=y
 CONFIG_GENERIC_GPIO=y
@@ -1176,7 +1177,7 @@ CONFIG_WLAN=y
 # CONFIG_LIBRA_SDIOIF is not set
 # CONFIG_SEMC_ZEUS_WLAN is not set
 CONFIG_BCM4329=m
-CONFIG_BCM4329_FW_PATH="/system/ect/firmware/fw_bcm4329.bin"
+CONFIG_BCM4329_FW_PATH="/system/etc/firmware/fw_bcm4329.bin"
 CONFIG_BCM4329_NVRAM_PATH="/system/etc/wifi/calibration"
 
 #
