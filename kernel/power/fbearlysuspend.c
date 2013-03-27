@@ -28,13 +28,16 @@ static enum {
 	FB_STATE_DRAWING_OK,
 } fb_state;
 
+
 /* tell userspace to stop drawing, wait for it to stop */
 static void stop_drawing_early_suspend(struct early_suspend *h)
 {
 	int ret;
 	unsigned long irq_flags;
-
-	msleep (350);
+	/* FIXME: earlysuspend breaks androids CRT-off animation
+	* Sleep a little bit to get it played properly */
+	msleep(500);
+	
 	spin_lock_irqsave(&fb_state_lock, irq_flags);
 	fb_state = FB_STATE_REQUEST_STOP_DRAWING;
 	spin_unlock_irqrestore(&fb_state_lock, irq_flags);
