@@ -3,9 +3,9 @@
 <recovery>
 	<details>
 		<resolution width="480" height="854" />
-		<author>TeamWin</author>
+		<author>wedgess</author>
 		<title>Backup Naowz</title>
-		<description>Default basic theme</description>
+		<description>LuPuS_theme_thanks@wechy</description>
 		<preview>preview.jpg</preview>
 	</details>
 
@@ -109,27 +109,27 @@
 		<variable name="sort_col3_button_x" value="300" />
 		<variable name="input_width" value="460" />
 		<variable name="input_height" value="40" />
-		<variable name="input_background_color" value="#303030" />
+		<variable name="input_background_color" value="#000000" />
 		<variable name="input_cursor_color" value="#33B5E5" />
 		<variable name="input_cursor_width" value="3" />
 		<variable name="console_x" value="0" />
 		<variable name="console_width" value="480" />
 		<variable name="console_foreground" value="#A0A0A0" />
-		<variable name="console_background" value="#303030" />
-		<variable name="console_scroll" value="#303030" />
+		<variable name="console_background" value="#000000" />
+		<variable name="console_scroll" value="#000000" />
 		<variable name="console_action_height" value="320" />
 		<variable name="console_install_height" value="440" />
 		<variable name="console_installdone_height" value="300" />
 		<variable name="fileselector_x" value="5" />
 		<variable name="fileselector_width" value="470" />
 		<variable name="fileselector_install_height" value="564" />
-		<variable name="fileselector_header_background" value="#202020" />
+		<variable name="fileselector_header_background" value="#000000" />
 		<variable name="fileselector_header_textcolor" value="#AAAAAA" />
 		<variable name="fileselector_header_separatorcolor" value="#33B5E5" />
 		<variable name="fileselector_header_separatorheight" value="3" />
 		<variable name="fileselector_separatorcolor" value="#505050" />
 		<variable name="fileselector_separatorheight" value="2" />
-		<variable name="fileselector_background" value="#303030" />
+		<variable name="fileselector_background" value="#000000" />
 		<variable name="fileselector_highlight_color" value="#505050" />
 		<variable name="fileselector_highlight_font_color" value="#33B5E5" />
 		<variable name="fileselector_spacing" value="18" />
@@ -142,7 +142,7 @@
 		<variable name="listbox_x" value="5" />
 		<variable name="listbox_width" value="470" />
 		<variable name="listbox_tz_height" value="310" />
-		<variable name="listbox_background" value="#303030" />
+		<variable name="listbox_background" value="#000000" />
 		<variable name="listbox_spacing" value="18" />
 		<variable name="sd_plus_x" value="280" />
 		<variable name="sdext_text_x" value="84" />
@@ -169,7 +169,7 @@
 
 	<templates>
 		<template name="header">
-			<background color="%backgroundcolor%" />
+			<background color="#000000FF" />
 
 			<object type="image">
 				<image resource="top_bar" />
@@ -178,8 +178,8 @@
 
 			<object type="text" color="%text_color%">
 				<font resource="font" />
-				<placement x="100" y="10" />
-				<text>Team Win Recovery Project  v%tw_version%</text>
+				<placement x="210" y="10" />
+				<text>%tw_version%</text>
 			</object>
 
 			<object type="text" color="%text_color%">
