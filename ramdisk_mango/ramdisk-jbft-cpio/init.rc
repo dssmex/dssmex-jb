@@ -362,12 +362,13 @@ on boot
     setprop net.tcp.buffersize.evdo_b  4096,87380,704512,4096,16384,262144
 
 # Run LuPuS script
-    exec /sbin/lupus-script.sh wedgess
+    exec /sbin/lupus-script.sh
 
 # Set this property so surfaceflinger is not started by system_init
     setprop system_init.startsurfaceflinger 0
 
-    exec /sbin/sysinit
+# Run sysinit
+    exec /system/bin/sysinit
 
     class_start core
     class_start main
