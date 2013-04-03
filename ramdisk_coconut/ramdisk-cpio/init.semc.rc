@@ -99,6 +99,7 @@ on boot
     #load new wl1271 modules
     exec /system/bin/wifiload
 
+
     # USB host support
     mkdir /dev/bus 0771 system system
     mkdir /dev/bus/usb 0771 system system
