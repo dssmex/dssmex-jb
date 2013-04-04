@@ -1,0 +1,2421 @@
+#!/system/bin/sh
+
+### LuPuS v1 ###
+## by - wedgess@XDA 
+# Contact at xda  --  http://forum.xda-developers.com/member.php?u=4609488
+
+BUSYBOX=/system/xbin/busybox
+
+
+check_version()
+{
+$BUSYBOX clear
+
+if [ -e /system/lupus.prop ]; then
+	recover_choice=`$BUSYBOX grep "recovery.choice=" /system/lupus.prop | $BUSYBOX sed "s/recovery.choice=//g"`
+	$BUSYBOX echo ""
+	$BUSYBOX echo ""
+	$BUSYBOX echo "[*] Default $recover_choice"
+else
+	$BUSYBOX echo "[*] You have not yet changed recovery from the default CWM"
+fi
+
+sleep 4
+recovery_menu
+}
+
+
+create_prop_twrp()
+{
+$BUSYBOX mount -o remount rw /system
+
+if [ -e /system/lupus.prop ]; then
+	$BUSYBOX sed "s/recovery.choice=cwm/recovery.choice=twrp/" /system/lupus.prop > /system/1lupus.prop
+	$BUSYBOX mv /system/1lupus.prop /system/lupus.prop
+else
+	$BUSYBOX echo "#" > /system/lupus.prop
+	$BUSYBOX echo "# LuPuS KERNEL PROPERTIES" >> /system/lupus.prop
+	$BUSYBOX echo "#" >> /system/lupus.prop
+	$BUSYBOX echo "recovery.choice=twrp" >> /system/lupus.prop
+fi
+
+$BUSYBOX mount -o remount ro /system
+}
+
+create_prop_cwm()
+{
+$BUSYBOX mount -o remount rw /system
+
+if [ -e /system/lupus.prop ]; then
+	$BUSYBOX sed "s/recovery.choice=twrp/recovery.choice=cwm/" /system/lupus.prop > /system/1lupus.prop
+	$BUSYBOX mv /system/1lupus.prop /system/lupus.prop
+else
+	$BUSYBOX echo "#" > /system/lupus.prop
+	$BUSYBOX echo "# LuPuS KERNEL PROPERTIES" >> /system/lupus.prop
+	$BUSYBOX echo "#" >> /system/lupus.prop
+	$BUSYBOX echo "recovery.choice=cwm" >> /system/lupus.prop
+fi
+
+$BUSYBOX mount -o remount ro /system
+}
+
+
+
+CWM_choice()
+{
+# mount system as r/w
+$BUSYBOX mount -o remount rw /system
+$BUSYBOX echo ""
+$BUSYBOX echo "[CWM]"
+create_prop_cwm
+sleep 1
+$BUSYBOX echo "[*} CWM is set as default recovery"
+$BUSYBOX echo ""
+sleep 1
+$BUSYBOX echo "[Q] Reboot now (default = NO   y = reboot)"
+# mount as r/o
+$BUSYBOX mount -o remount ro /system
+read reup
+
+if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
+	$BUSYBOX clear
+	$BUSYBOX echo "[*] Rebooting ...."
+	$BUSYBOX echo ""
+	$BUSYBOX echo -n "   3"
+	sleep 1
+	$BUSYBOX echo -n " 2"
+	sleep 1
+	$BUSYBOX echo -n " 1"
+	sleep 1
+	reboot
+else
+	$BUSYBOX echo "[*] Returning to menu"
+	sleep 3
+fi
+}
+
+
+TWRP_choice()
+{
+# mount system as r/w
+$BUSYBOX mount -o remount rw /system
+$BUSYBOX echo ""
+$BUSYBOX echo "[TWRP]"
+create_prop_twrp
+sleep 1
+$BUSYBOX echo "[*} TWRP is set as default recovery"
+$BUSYBOX echo ""
+sleep 1
+$BUSYBOX echo "[Q] Reboot now (default = NO   y = reboot)"
+# mount as r/o
+$BUSYBOX mount -o remount ro /system
+read reup
+
+if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
+	$BUSYBOX clear
+	$BUSYBOX echo "[*] Rebooting ...."
+	$BUSYBOX echo ""
+	$BUSYBOX echo -n "   3"
+	sleep 1
+	$BUSYBOX echo -n " 2"
+	sleep 1
+	$BUSYBOX echo -n " 1"
+	sleep 1
+	reboot
+else
+	$BUSYBOX echo "[*] Returning to menu"
+	sleep 3
+fi
+}
+
+
+cifs_enable()
+{
+# mount system r/w
+$BUSYBOX mount -o remount rw /system
+$BUSYBOX echo "[CIFS]"
+sleep 2
+# link cifs modules
+$BUSYBOX ln -sf /res/cifs/cifs.ko /system/lib/modules/cifs.ko
+$BUSYBOX ln -sf /res/cifs/md4.ko /system/lib/modules/md4.ko
+$BUSYBOX ln -sf /res/cifs/nls_utf8.ko /system/lib/modules/nls_utf8.ko
+$BUSYBOX insmod /system/lib/modules/cifs.ko
+$BUSYBOX insmod /system/lib/modules/md4.ko
+$BUSYBOX insmod /system/lib/modules/nls_utf8.ko
+$BUSYBOX echo "[i] In the case of no errors, no reboot required!"
+sleep 1
+$BUSYBOX echo ""
+$BUSYBOX echo "[*] CIFS enabled"
+sleep 3
+# unmount r/o
+$BUSYBOX mount -o remount ro /system
+}
+
+cifs_disable()
+{
+# mount system
+$BUSYBOX mount -o remount rw /system
+$BUSYBOX echo "[CIFS]"
+sleep 2
+# removes cifs modules
+$BUSYBOX rmmod /system/lib/modules/nls_utf8.ko
+$BUSYBOX rmmod /system/lib/modules/md4.ko
+$BUSYBOX rmmod /system/lib/modules/cifs.ko
+rm /system/lib/modules/nls_utf8.ko
+rm /system/lib/modules/md4.ko
+rm /system/lib/modules/cifs.ko
+$BUSYBOX echo "[i] In the case of no errors, no reboot required!"
+sleep 1
+$BUSYBOX echo ""
+$BUSYBOX echo "[*] CIFS disabled"
+sleep 3
+# unmount r/o
+$BUSYBOX mount -o remount ro /system
+}
+
+usb_otg_enable()
+{
+# mount system and create lupuslog
+$BUSYBOX mount -o remount rw /system
+$BUSYBOX echo "[USB-OTG] Enabling now" 
+sleep 2
+$BUSYBOX ln -sf /res/usb_otg/usb-storage.ko /system/lib/modules/usb-storage.ko
+$BUSYBOX ln -sf /res/usb_otg/fuse.ko /system/lib/modules/fuse.ko
+$BUSYBOX ln -sf /res/usb_otg/ntfs.ko /system/lib/modules/ntfs.ko
+$BUSYBOX insmod /system/lib/modules/usb-storage.ko
+$BUSYBOX insmod /system/lib/modules/fuse.ko
+$BUSYBOX insmod /system/lib/modules/ntfs.ko
+$BUSYBOX echo "[i] In the case of no errors, no reboot required!"
+$BUSYBOX echo "[*] USB-OTG enabled" 
+$BUSYBOX mount -o remount ro /system
+sleep 2
+}
+
+usb_otg_disable()
+{
+# mount system and create lupuslog
+$BUSYBOX mount -o remount rw /system
+$BUSYBOX echo "[USB-OTG] Disabling.."
+sleep 2
+$BUSYBOX rmmod /system/lib/modules/ntfs.ko
+$BUSYBOX rmmod /system/lib/modules/fuse.ko
+$BUSYBOX rmmod /system/lib/modules/usb-storage.ko
+$BUSYBOX rm /system/lib/modules/ntfs.ko
+$BUSYBOX rm /system/lib/modules/fuse.ko
+$BUSYBOX rm /system/lib/modules/usb-storage.ko
+$BUSYBOX echo "[i] In the case of no errors, no reboot required!"
+$BUSYBOX echo "[*] USB-OTG disabled" 
+$BUSYBOX mount -o remount ro /system
+sleep 2
+}
+
+markers()
+{
+# mount as r/w
+$BUSYBOX mount -o remount rw /system
+sleep 1
+su -c 'rm -r /data/local/tmp; mkdir /data/local/tmp; rm /system/lupus.prop'
+sleep 1
+$BUSYBOX echo "[*] All markers removed"
+sleep 1
+$BUSYBOX echo ""
+$BUSYBOX echo "[Q] Move kernel modules to modules.old?"
+$BUSYBOX echo ""
+$BUSYBOX echo "[i] default = NO  (deletes them)" 
+$BUSYBOX echo "    y: YES, move them to modules.old"
+read reup
+
+if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
+	$BUSYBOX echo "[*] Moving existing modules directory"
+	$BUSYBOX cp -af /system/lib/modules /system/lib/modules.old
+	$BUSYBOX rm -rf /system/lib/modules
+else
+	$BUSYBOX echo "[*] Removing existing modules directory"
+	$BUSYBOX rm -rf /system/lib/modules
+fi
+
+sleep 2
+# mount as r/o
+$BUSYBOX mount -o remount ro /system
+$BUSYBOX echo "[i] All marker files will be replaced on boot"
+sleep 1
+$BUSYBOX echo "[Q] Reboot now ----- "
+$BUSYBOX echo ""
+$BUSYBOX echo "   (default = NO   y = reboot)"
+read reup
+
+if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
+	$BUSYBOX clear
+	$BUSYBOX echo "[*] Rebooting ...."
+	$BUSYBOX echo ""
+	$BUSYBOX echo -n "   3"
+	sleep 1
+	$BUSYBOX echo -n " 2"
+	sleep 1
+	$BUSYBOX echo -n " 1"
+	sleep 1
+	reboot
+else
+	$BUSYBOX echo "[*] Returning to menu"
+	sleep 3
+fi
+}
+
+
+
+clean()
+{
+$BUSYBOX echo "[CLEANING] Wait...."
+sleep 2
+$BUSYBOX mount -o remount rw /system
+# remove cache apps
+if [ -e /cache/*.apk ];then
+	$BUSYBOX rm -f /cache/*.apk > /dev/null 2>&1
+fi
+# remove cache temp
+if [ -e /cache/*.tmp ]; then
+	$BUSYBOX rm -f /cache/*.tmp > /dev/null 2>&1
+fi
+# remove dalvik-cache apps
+if [ -e /data/dalvik-cache/*.apk ]; then
+	$BUSYBOX rm -f /data/dalvik-cache/*.apk > /dev/null 2>&1
+fi
+# remove dalvik-cache temp
+if [ -e /data/dalvik-cache/*.tmp ]; then
+	$BUSYBOX rm -f /data/dalvik-cache/*.tmp > /dev/null 2>&1
+fi
+# remove usuage stats
+if [ -e /data/system/usagestats/* ]; then
+	$BUSYBOX rm -f /data/system/usagestats/* > /dev/null 2>&1
+fi
+# remove app usuage stats
+if [ -e /data/system/appusagestats/* ]; then
+	$BUSYBOX rm -f /data/system/appusagestats/* > /dev/null 2>&1
+fi
+# remove dropbox data content
+if [ -e /data/system/dropbox/* ]; then
+	$BUSYBOX rm -f /data/system/dropbox/* > /dev/null 2>&1
+fi
+# remove user behaviour
+if  [ -e /data/system/userbehavior.db ]; then
+	$BUSYBOX rm -f /data/system/userbehavior.db > /dev/null 2>&1
+fi
+# disable usuage stats
+if  [ -d /data/system/usagestats ]; then
+	chmod 0400 /data/system/usagestats > /dev/null 2>&1
+fi
+# disable app usage stats
+if  [ -d /data/system/appusagestats ]; then
+	$BUSYBOX chmod 0400 /data/system/appusagestats > /dev/null 2>&1
+fi
+$BUSYBOX mount -o remount ro /system
+$BUSYBOX clear
+$BUSYBOX echo "[CLEAN-UP] Complete..."
+sleep 3
+tweak_menu
+}
+
+
+optsql()
+{
+# mount as r/o
+$BUSYBOX mount -o remount rw /system
+$BUSYBOX echo "[SQLITE3 OPTIMIZATION] Please wait..."
+$BUSYBOX chown root.root /sbin/sqlite3
+$BUSYBOX chmod 0755 /sbin/sqlite3
+$BUSYBOX echo ""
+			  	for i in `$BUSYBOX find ./ -iname "*.db"`; do
+				/system/xbin/sqlite3 $i 'VACUUM;'
+				$BUSYBOX clear; $BUSYBOX echo "[VACUUMED] : $i"
+				sleep 0.4
+				/system/xbin/sqlite3 $i 'REINDEX;'
+				$BUSYBOX echo "[REINDEXED] : $i"
+				sleep 0.4
+				done
+$BUSYBOX echo ""
+# mount as r/o
+$BUSYBOX mount -o remount ro /system
+sleep 1
+$BUSYBOX echo "[*] Vacuming and Reindexing complete..."
+sleep 2
+$BUSYBOX echo "[*] Returning to menu"
+sleep 2.8
+tweak_menu
+}
+
+
+LMK()
+{
+# lowmemorykiller tweaks
+$BUSYBOX echo ""
+$BUSYBOX echo "[LMK] Setting tweaks..."
+sleep 1
+$BUSYBOX echo "0,2,3,7,9,15" > /sys/module/lowmemorykiller/parameters/adj
+$BUSYBOX echo "2560,3840,5120,8960,11520,14080" > /sys/module/lowmemorykiller/parameters/minfree
+$BUSYBOX echo "32" > /sys/module/lowmemorykiller/parameters/cost
+$BUSYBOX echo "0" > /sys/module/lowmemorykiller/parameters/debug_level
+sleep 2
+$BUSYBOX echo ""
+$BUSYBOX echo "[*] LowMemoryKiller tweaks set"
+$BUSYBOX echo ""
+$BUSYBOX echo "[*] ::NOTE:: tweaks will be reset after reboot"
+$BUSYBOX echo "    unless you set it as init.d"
+$BUSYBOX echo ""
+sleep 2
+$BUSYBOX echo "[Q] Do you want to set these tweaks at every boot"
+$BUSYBOX echo "    by creating an init.d script??"
+$BUSYBOX echo ""
+$BUSYBOX echo "  (default = NO       y = create init.d)"
+read reup
+
+	if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
+		$BUSYBOX clear
+		$BUSYBOX mount -o remount rw /system
+		$BUSYBOX echo "#!$BUSYBOX sh" >> /system/etc/init.d/70lps_lmk
+		$BUSYBOX echo "echo 0,2,3,7,9,15 >> /sys/module/lowmemorykiller/parameters/adj" >> /system/etc/init.d/70lps_lmk
+		$BUSYBOX echo "echo 2560,3840,5120,8960,11520,14080 >> /sys/module/lowmemorykiller/parameters/minfree" >> /system/etc/init.d/70lps_lmk
+		$BUSYBOX echo "echo 32 >> /sys/module/lowmemorykiller/parameters/cost" >> /system/etc/init.d/70lps_lmk
+		$BUSYBOX echo "echo 0 >> /sys/module/lowmemorykiller/parameters/debug_level" >> /system/etc/init.d/70lps_lmk
+		$BUSYBOX chmod 0755 /system/etc/init.d/70lps_lmk
+		$BUSYBOX mount -o remount ro /system
+		$BUSYBOX echo "[*] Created 70lps_lmk in init.d directory"
+		sleep 1
+	fi
+
+$BUSYBOX echo ""
+$BUSYBOX echo "[LMK] Complete.."
+sleep 3
+tweak_menu
+}
+
+
+
+KMT()
+{
+# Need to be split so that they do not conflict with the vm init.d
+$BUSYBOX clear
+$BUSYBOX echo "[MEMORY-TWEAKS] These values are preset"
+$BUSYBOX echo ""
+sleep 1
+$BUSYBOX echo ":: To set values manually use performance menu ::"
+sleep 3.5
+
+if [[ -f /system/etc/init.d/71lps_vmtweaks ]]; then
+	$BUSYBOX echo ""
+	$BUSYBOX echo "[*] Applying..."
+	$BUSYBOX echo ""
+	$BUSYBOX echo 0 > /proc/sys/vm/oom_kill_allocating_task
+	$BUSYBOX echo 0 > /proc/sys/vm/panic_on_oom
+	$BUSYBOX echo 1 > /proc/sys/vm/overcommit_memory
+	$BUSYBOX echo 0 > /proc/sys/kernel/panic_on_oops
+	$BUSYBOX echo 0 > /proc/sys/kernel/panic
+	$BUSYBOX echo 1366 > /proc/sys/kernel/random/read_wakeup_threshold
+	$BUSYBOX echo ""
+else
+	$BUSYBOX echo ""
+	$BUSYBOX echo "[*] Applying..."
+	$BUSYBOX echo ""
+	$BUSYBOX echo 0 > /proc/sys/vm/oom_kill_allocating_task
+	$BUSYBOX echo 0 > /proc/sys/vm/panic_on_oom
+	$BUSYBOX echo 1 > /proc/sys/vm/overcommit_memory
+	$BUSYBOX echo 40 > /proc/sys/vm/overcommit_ratio
+	$BUSYBOX echo 20 > /proc/sys/vm/swappiness
+	$BUSYBOX echo 80 > /proc/sys/vm/dirty_ratio
+	$BUSYBOX echo 60 > /proc/sys/vm/dirty_background_ratio
+	$BUSYBOX echo 30 > /proc/sys/vm/vfs_cache_pressure
+	$BUSYBOX echo 2048 > /proc/sys/vm/min_free_kbytes
+	$BUSYBOX echo 500 > /proc/sys/vm/dirty_expire_centisecs
+	$BUSYBOX echo 1000 > /proc/sys/vm/dirty_writeback_centisecs
+	$BUSYBOX echo 1 > /proc/sys/kernel/panic_on_oops
+	$BUSYBOX echo 30 > /proc/sys/kernel/panic
+	$BUSYBOX echo 1366 > /proc/sys/kernel/random/read_wakeup_threshold
+fi
+
+sleep 1
+$BUSYBOX echo "[MEMORY-TWEAKS] Complete..."
+sleep 2.5
+$BUSYBOX echo ""
+$BUSYBOX echo "[Q] Do you want to set these tweaks at every boot"
+$BUSYBOX echo "    by creating an init.d script"
+$BUSYBOX echo ""
+$BUSYBOX echo "  (default = NO         y = create init.d)"
+read reup
+
+if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
+	$BUSYBOX clear
+	$BUSYBOX mount -o remount rw system
+
+		if [[ -f /system/etc/init.d/71lps_vmtweaks ]]; then
+			$BUSYBOX echo "echo 0 > /proc/sys/vm/oom_kill_allocating_task" >> /system/etc/init.d/71lps_vmtweaks
+			$BUSYBOX echo "echo 0 > /proc/sys/vm/panic_on_oom" >> /system/etc/init.d/71lps_vmtweaks
+			$BUSYBOX echo "echo 1 > /proc/sys/vm/overcommit_memory" >> /system/etc/init.d/71lps_vmtweaks
+			$BUSYBOX echo "echo 0 > /proc/sys/kernel/panic_on_oops" >> /system/etc/init.d/71lps_vmtweaks
+			$BUSYBOX echo "echo 0 > /proc/sys/kernel/panic" >> /system/etc/init.d/71lps_vmtweaks
+			$BUSYBOX echo "echo 1366 > /proc/sys/kernel/random/read_wakeup_threshold" >> /system/etc/init.d/71lps_vmtweaks
+			$BUSYBOX chmod 0755 /system/etc/init.d/71lps_vmtweaks
+			$BUSYBOX mount -o remount ro /system
+			$BUSYBOX echo "[*] tweaks added to 71lps_vmtweaks init.d"
+			sleep 2.3
+		else
+			$BUSYBOX echo "#!$BUSYBOX sh" >> /system/etc/init.d/71lps_vmtweaks
+			$BUSYBOX echo "" >> /system/etc/init.d/71lps_vmtweaks
+			$BUSYBOX echo "echo 0 > /proc/sys/vm/oom_kill_allocating_task" >> /system/etc/init.d/71lps_vmtweaks
+			$BUSYBOX echo "echo 0 > /proc/sys/vm/panic_on_oom" >> /system/etc/init.d/71lps_vmtweaks
+			$BUSYBOX echo "echo 1 > /proc/sys/vm/overcommit_memory" >> /system/etc/init.d/71lps_vmtweaks
+			$BUSYBOX echo "echo 40 > /proc/sys/vm/overcommit_ratio" >> /system/etc/init.d/71lps_vmtweaks
+			$BUSYBOX echo "echo 20 > /proc/sys/vm/swappiness" >> /system/etc/init.d/71lps_vmtweaks
+			$BUSYBOX echo "echo 80 > /proc/sys/vm/dirty_ratio" >> /system/etc/init.d/71lps_vmtweaks
+			$BUSYBOX echo "echo 60 > /proc/sys/vm/dirty_background_ratio" >> /system/etc/init.d/71lps_vmtweaks
+			$BUSYBOX echo "echo 30 > /proc/sys/vm/vfs_cache_pressure" >> /system/etc/init.d/71lps_vmtweaks
+			$BUSYBOX echo "echo 2048 > /proc/sys/vm/min_free_kbytes" >> /system/etc/init.d/71lps_vmtweaks
+			$BUSYBOX echo "echo 2000 > /proc/sys/vm/dirty_expire_centisecs" >> /system/etc/init.d/71lps_vmtweaks
+			$BUSYBOX echo "echo 1000 > /proc/sys/vm/dirty_writeback_centisecs" >> /system/etc/init.d/71lps_vmtweaks
+			$BUSYBOX echo "echo 0 > /proc/sys/kernel/panic_on_oops" >> /system/etc/init.d/71lps_vmtweaks
+			$BUSYBOX echo "echo 0 > /proc/sys/kernel/panic" >> /system/etc/init.d/71lps_vmtweaks
+			$BUSYBOX echo "echo 1366 > /proc/sys/kernel/random/read_wakeup_threshold" >> /system/etc/init.d/71lps_vmtweaks
+			$BUSYBOX chmod 0755 /system/etc/init.d/71lps_vmtweaks
+			$BUSYBOX mount -o remount ro /system
+			$BUSYBOX echo "[*] 71lps_vmtweaks init.d has been created"
+			sleep 2.3
+		fi
+fi
+tweak_menu
+}
+
+
+NOP()
+{
+$BUSYBOX clear
+$BUSYBOX echo ""
+$BUSYBOX echo "[NETWORK-OPTIMIZATIONS] Applying..."
+sleep 1
+# Network optimization
+$BUSYBOX echo 2097152 > /proc/sys/net/core/wmem_max
+$BUSYBOX echo 2097152 > /proc/sys/net/core/rmem_max
+$BUSYBOX echo 20480 > /proc/sys/net/core/optmem_max
+$BUSYBOX echo 1 > /proc/sys/net/ipv4/tcp_moderate_rcvbuf
+$BUSYBOX echo 6144 > /proc/sys/net/ipv4/udp_rmem_min
+$BUSYBOX echo 6144 > /proc/sys/net/ipv4/udp_wmem_min
+$BUSYBOX echo 6144 87380 2097152 > /proc/sys/net/ipv4/tcp_rmem
+$BUSYBOX echo 6144 87380 2097152 > /proc/sys/net/ipv4/tcp_wmem
+$BUSYBOX echo 0 > /proc/sys/net/ipv4/tcp_timestamps
+$BUSYBOX echo 1 > /proc/sys/net/ipv4/tcp_tw_reuse
+$BUSYBOX echo 1 > /proc/sys/net/ipv4/tcp_tw_recycle
+$BUSYBOX echo 1 > /proc/sys/net/ipv4/tcp_sack
+$BUSYBOX echo 1 > /proc/sys/net/ipv4/tcp_window_scaling
+$BUSYBOX echo 5 > /proc/sys/net/ipv4/tcp_keepalive_probes
+$BUSYBOX echo 156 > /proc/sys/net/ipv4/tcp_keepalive_intvl
+$BUSYBOX echo 30 > /proc/sys/net/ipv4/tcp_fin_timeout
+$BUSYBOX echo 0 > /proc/sys/net/ipv4/tcp_ecn
+$BUSYBOX echo 360000 > /proc/sys/net/ipv4/tcp_max_tw_buckets
+$BUSYBOX echo 2 > /proc/sys/net/ipv4/tcp_synack_retries
+$BUSYBOX echo 1 > /proc/sys/net/ipv4/route/flush
+$BUSYBOX echo 1 > /proc/sys/net/ipv4/icmp_echo_ignore_all
+$BUSYBOX echo 524288 > /proc/sys/net/core/wmem_max
+$BUSYBOX echo 524288 > /proc/sys/net/core/rmem_max
+$BUSYBOX echo 110592 > /proc/sys/net/core/rmem_default
+$BUSYBOX echo 110592 > /proc/sys/net/core/wmem_default
+sleep 2
+$BUSYBOX clear
+$BUSYBOX echo "[NETWORK-OPTIMIZATIONS] Complete...."
+sleep 3
+$BUSYBOX echo ""
+$BUSYBOX echo ""
+$BUSYBOX echo "[Q] Do you want to set these tweaks at every boot"
+$BUSYBOX echo "    by creating an init.d script"
+$BUSYBOX echo ""
+$BUSYBOX echo "  (default = NO        y = create init.d)"
+read reup
+if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
+	$BUSYBOX clear
+	$BUSYBOX mount -o remount rw system
+	$BUSYBOX echo "#!$BUSYBOX sh" >> /system/etc/init.d/72lps_networkopt
+	$BUSYBOX echo "" >> /system/etc/init.d/72lps_networkopt
+	$BUSYBOX echo "echo 2097152 > /proc/sys/net/core/wmem_max" >> system/etc/init.d/72lps_networkopt
+	$BUSYBOX echo "echo 2097152 > /proc/sys/net/core/rmem_max" >> system/etc/init.d/72lps_networkopt
+	$BUSYBOX echo "echo 20480 > /proc/sys/net/core/optmem_max" >> system/etc/init.d/72lps_networkopt
+	$BUSYBOX echo "echo 1 > /proc/sys/net/ipv4/tcp_moderate_rcvbuf" >> system/etc/init.d/72lps_networkopt
+	$BUSYBOX echo "echo 6144 > /proc/sys/net/ipv4/udp_rmem_min" >> system/etc/init.d/72lps_networkopt
+	$BUSYBOX echo "echo 6144 > /proc/sys/net/ipv4/udp_wmem_min" >> system/etc/init.d/72lps_networkopt
+	$BUSYBOX echo "echo 6144 87380 2097152 > /proc/sys/net/ipv4/tcp_rmem" >> system/etc/init.d/72lps_networkopt
+	$BUSYBOX echo "echo 6144 87380 2097152 > /proc/sys/net/ipv4/tcp_wmem" >> system/etc/init.d/72lps_networkopt
+	$BUSYBOX echo "echo 0 > /proc/sys/net/ipv4/tcp_timestamps" >> system/etc/init.d/72lps_networkopt
+	$BUSYBOX echo "echo 1 > /proc/sys/net/ipv4/tcp_tw_reuse" >> system/etc/init.d/72lps_networkopt
+	$BUSYBOX echo "echo 1 > /proc/sys/net/ipv4/tcp_tw_recycle" >> system/etc/init.d/72lps_networkopt
+	$BUSYBOX echo "echo 1 > /proc/sys/net/ipv4/tcp_sack" >> system/etc/init.d/72lps_networkopt
+	$BUSYBOX echo "echo 1 > /proc/sys/net/ipv4/tcp_window_scaling" >> system/etc/init.d/72lps_networkopt
+	$BUSYBOX echo "echo 5 > /proc/sys/net/ipv4/tcp_keepalive_probes" >> system/etc/init.d/72lps_networkopt
+	$BUSYBOX echo "echo 156 > /proc/sys/net/ipv4/tcp_keepalive_intvl" >> system/etc/init.d/72lps_networkopt
+	$BUSYBOX echo "echo 30 > /proc/sys/net/ipv4/tcp_fin_timeout" >> system/etc/init.d/72lps_networkopt
+	$BUSYBOX echo "echo 0 > /proc/sys/net/ipv4/tcp_ecn" >> system/etc/init.d/72lps_networkopt
+	$BUSYBOX echo "echo 360000 > /proc/sys/net/ipv4/tcp_max_tw_buckets" >> system/etc/init.d/72lps_networkopt
+	$BUSYBOX echo "echo 2 > /proc/sys/net/ipv4/tcp_synack_retries" >> system/etc/init.d/72lps_networkopt
+	$BUSYBOX echo "echo 1 > /proc/sys/net/ipv4/route/flush" >> system/etc/init.d/72lps_networkopt
+	$BUSYBOX echo "echo 1 > /proc/sys/net/ipv4/icmp_echo_ignore_all" >> system/etc/init.d/72lps_networkopt
+	$BUSYBOX echo "echo 524288 > /proc/sys/net/core/wmem_max" >> system/etc/init.d/72lps_networkopt
+	$BUSYBOX echo "echo 524288 > /proc/sys/net/core/rmem_max" >> system/etc/init.d/72lps_networkopt
+	$BUSYBOX echo "echo 110592 > /proc/sys/net/core/rmem_default" >> system/etc/init.d/72lps_networkopt
+	$BUSYBOX echo "echo 110592 > /proc/sys/net/core/wmem_default" >> system/etc/init.d/72lps_networkopt
+	$BUSYBOX chmod 0755 /system/etc/init.d/72lps_networkopt
+	$BUSYBOX echo "[*] 72lps_networkopt init.d has been created"
+	sleep 2.5
+fi
+sleep 1
+tweak_menu
+}
+
+
+WIFI()
+{
+$BUSYBOX clear
+# Defend against arp spoofing
+$BUSYBOX echo "[WIFI] Defend against arp spoofing"
+sleep 2
+# Turn on Source Address Verification in all interfaces.
+$BUSYBOX echo "1" > /proc/sys/net/ipv4/conf/all/rp_filter
+$BUSYBOX echo "1" > /proc/sys/net/ipv4/conf/default/rp_filter
+# Do not accept ICMP redirects.
+$BUSYBOX echo "0" > /proc/sys/net/ipv4/conf/all/accept_redirects
+$BUSYBOX echo "0" > /proc/sys/net/ipv4/conf/default/accept_redirects
+# Do not send ICMP redirects.
+$BUSYBOX echo "0" > /proc/sys/net/ipv4/conf/all/send_redirects
+$BUSYBOX echo "0" > /proc/sys/net/ipv4/conf/default/send_redirects
+# Ignore ICMP broadcasts will stop gateway from responding to broadcast pings.
+$BUSYBOX echo "1" > /proc/sys/net/ipv4/icmp_echo_ignore_broadcasts
+# Ignore bogus ICMP errors.
+$BUSYBOX echo "1" > /proc/sys/net/ipv4/icmp_ignore_bogus_error_responses
+# Do not accept IP source route packets.
+$BUSYBOX echo "0" > /proc/sys/net/ipv4/conf/all/accept_source_route
+$BUSYBOX echo "0" > /proc/sys/net/ipv4/conf/default/accept_source_route
+# Turn on log Martian Packets with impossible addresses.
+$BUSYBOX echo "1" > /proc/sys/net/ipv4/conf/all/log_martians
+$BUSYBOX echo "1" > /proc/sys/net/ipv4/conf/default/log_martians
+$BUSYBOX clear
+$BUSYBOX echo "[*] Complete...."
+sleep 2
+$BUSYBOX echo ""
+$BUSYBOX echo "[Q] Do you want to set these tweaks at every boot"
+$BUSYBOX echo "    by creating an init.d script"
+$BUSYBOX echo ""
+$BUSYBOX echo "  (default = NO        y = create init.d)"
+read reup
+if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
+$BUSYBOX clear
+$BUSYBOX mount -o remount rw system
+# Turn on Source Address Verification in all interfaces.
+$BUSYBOX echo "#!$BUSYBOX sh" >> /system/etc/init.d/73lps_spoof
+$BUSYBOX echo "" >> /system/etc/init.d/73lps_spoof
+$BUSYBOX echo "$BUSYBOX echo 1 >> /proc/sys/net/ipv4/conf/all/rp_filter" >> /system/etc/init.d/73lps_spoof
+$BUSYBOX echo "$BUSYBOX echo 1 >> /proc/sys/net/ipv4/conf/default/rp_filter" >> /system/etc/init.d/73lps_spoof
+# Do not accept ICMP redirects.
+$BUSYBOX echo "$BUSYBOX echo 0 >> /proc/sys/net/ipv4/conf/all/accept_redirects" >> /system/etc/init.d/73lps_spoof
+$BUSYBOX echo "$BUSYBOX echo 0 >> /proc/sys/net/ipv4/conf/default/accept_redirects" >> /system/etc/init.d/72lps_spoof
+# Do not send ICMP redirects.
+$BUSYBOX echo "$BUSYBOX echo 0 >> /proc/sys/net/ipv4/conf/all/send_redirects" >> /system/etc/init.d/73lps_spoof
+$BUSYBOX echo "$BUSYBOX echo 0 >> /proc/sys/net/ipv4/conf/default/send_redirects" >> /system/etc/init.d/73lps_spoof
+# Ignore ICMP broadcasts will stop gateway from responding to broadcast pings.
+$BUSYBOX echo "$BUSYBOX echo 1 >> /proc/sys/net/ipv4/icmp_echo_ignore_broadcasts" >> /system/etc/init.d/73lps_spoof
+# Ignore bogus ICMP errors.
+$BUSYBOX echo "$BUSYBOX echo 1 >> /proc/sys/net/ipv4/icmp_ignore_bogus_error_responses" >> /system/etc/init.d/73lps_spoof
+# Do not accept IP source route packets.
+$BUSYBOX echo "$BUSYBOX echo 0 >> /proc/sys/net/ipv4/conf/all/accept_source_route" >> /system/etc/init.d/73lps_spoof
+$BUSYBOX echo "$BUSYBOX echo 0 >> /proc/sys/net/ipv4/conf/default/accept_source_route" >> /system/etc/init.d/73lps_spoof
+# Turn on log Martian Packets with impossible addresses.
+$BUSYBOX echo "$BUSYBOX echo 1 >> /proc/sys/net/ipv4/conf/all/log_martians" >> /system/etc/init.d/73lps_spoof
+$BUSYBOX echo "$BUSYBOX echo 1 >> /proc/sys/net/ipv4/conf/default/log_martians" >> /system/etc/init.d/73lps_spoof
+$BUSYBOX echo ""
+$BUSYBOX chmod 0755 /system/etc/init.d/73lps_spoof
+$BUSYBOX mount -o remount ro /system
+$BUSYBOX echo "[*] Created 73lps_spoof in init.d directory"
+sleep 2
+fi
+$BUSYBOX echo "[INIT.D] Defence against ARP spoofing set...."
+sleep 2
+tweak_menu
+}
+
+
+zram_enable()
+{
+# mount system as r/w
+$BUSYBOX mount -o remount rw /system
+$BUSYBOX echo ""
+$BUSYBOX echo "[ZRAM]"
+sleep 1
+$BUSYBOX echo "#!$BUSYBOX sh" >> /system/etc/init.d/74lps_zram
+$BUSYBOX echo "# by::wedgess:: for LuPuS Kernel" >> /system/etc/init.d/74lps_zram
+$BUSYBOX echo "" >> /system/etc/init.d/74lps_zram
+$BUSYBOX echo "echo $((60*1024*1024)) > /sys/block/zram0/disksize" >> /system/etc/init.d/74lps_zram
+$BUSYBOX echo "/system/xbin/mknod -m 600 /dev/zram0 b 253 0" >> /system/etc/init.d/74lps_zram
+$BUSYBOX echo "/system/xbin/mkswap /dev/zram0" >> /system/etc/init.d/74lps_zram
+$BUSYBOX echo "/system/xbin/swapon /dev/zram0" >> /system/etc/init.d/74lps_zram
+$BUSYBOX echo "" >> /system/etc/init.d/74lps_zram
+$BUSYBOX chmod 0755 /system/etc/init.d/74lps_zram
+$BUSYBOX echo "[*] zRam enabled"
+sleep 3
+$BUSYBOX clear
+sleep 1
+$BUSYBOX echo "[*} zRam will not be enabled untill you reboot"
+$BUSYBOX echo ""
+sleep 1
+$BUSYBOX echo "[Q] Reboot now ----- "
+$BUSYBOX echo ""
+$BUSYBOX echo "  (default = NO      y = reboot)"
+# mount as r/o
+$BUSYBOX mount -o remount ro /system
+read reup
+if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
+$BUSYBOX clear
+$BUSYBOX echo "[*] Rebooting ...."
+$BUSYBOX echo ""
+$BUSYBOX echo -n "   3"
+sleep 1
+$BUSYBOX echo -n " 2"
+sleep 1
+$BUSYBOX echo -n " 1"
+sleep 1
+reboot
+else
+$BUSYBOX echo "[*] Returning to menu"
+sleep 3
+fi
+}
+
+zram_disable()
+{
+# mount system as r/w
+$BUSYBOX mount -o remount rw /system
+rm /system/etc/init.d/74lps_zram
+$BUSYBOX echo ""
+$BUSYBOX echo "[*] zRam disabled"
+sleep 1
+$BUSYBOX echo "[i] zRam will not be disabled untill you reboot"
+$BUSYBOX echo ""
+sleep 3
+$BUSYBOX clear
+$BUSYBOX echo "[Q] Reboot now (default = NO   y = reboot)"
+# mount as r/o
+$BUSYBOX mount -o remount ro /system
+read reup
+if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
+$BUSYBOX clear
+$BUSYBOX echo "[*] Rebooting ...."
+$BUSYBOX echo ""
+$BUSYBOX echo -n "   3"
+sleep 1
+$BUSYBOX echo -n " 2"
+sleep 1
+$BUSYBOX echo -n " 1"
+sleep 1
+reboot
+else
+$BUSYBOX echo "[*] Returning to menu"
+sleep 3
+fi
+}
+
+zram_size()
+{
+# mount system r/w 
+$BUSYBOX mount -o remount rw /system
+$BUSYBOX echo ""
+$BUSYBOX echo "Enter size of zRam (eg) 30 = 30 MB"
+read ZRS
+
+# remove existing zram script
+if [ -f /system/ect/init.d/74lps_zram ]; then
+	$BUSYBOX rm /system/ect/init.d/74lps_zram
+fi
+$BUSYBOX echo "#!$BUSYBOX sh" >> /system/etc/init.d/74lps_zram
+$BUSYBOX echo "# by::wedgess:: for LuPuS Kernel" >> /system/etc/init.d/74lps_zram
+$BUSYBOX echo "" >> /system/etc/init.d/74lps_zram
+$BUSYBOX echo "echo $((60*1024*1024)) > /sys/block/zram0/disksize" >> /system/etc/init.d/74lps_zram
+$BUSYBOX echo "/system/xbin/mknod -m 600 /dev/zram0 b 253 0" >> /system/etc/init.d/74lps_zram
+$BUSYBOX echo "/system/xbin/mkswap /dev/zram0" >> /system/etc/init.d/74lps_zram
+$BUSYBOX echo "/system/xbin/swapon /dev/zram0" >> /system/etc/init.d/74lps_zram
+$BUSYBOX echo "" >> /system/etc/init.d/74lps_zram
+$BUSYBOX sed "s/$BUSYBOX echo \$((.*\*1024\*1024)) > \/sys\/block\/zram0\/disksize/$BUSYBOX echo \$(($ZRS\*1024\*1024)) > \/sys\/block\/zram0\/disksize/" /system/etc/init.d/74lps_zram > /system/etc/init.d/01zram
+$BUSYBOX mv /system/etc/init.d/01zram /system/etc/init.d/74lps_zram
+$BUSYBOX chmod 0755 /system/etc/init.d/74lps_zram
+$BUSYBOX clear
+$BUSYBOX echo "[*] zRam size set as $ZRS MB"
+$BUSYBOX echo ""
+sleep 3
+$BUSYBOX clear
+$BUSYBOX echo "[i] zRam size will not change untill you reboot"
+$BUSYBOX echo ""
+sleep 1
+$BUSYBOX echo "[Q] Reboot now -----"
+$BUSYBOX echo ""
+$BUSYBOX echo " (default = NO      y = reboot)"
+# mount as r/o
+$BUSYBOX mount -o remount ro /system
+read reup
+
+if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
+	$BUSYBOX clear
+	$BUSYBOX echo "[*] Rebooting ...."
+	$BUSYBOX echo ""
+	$BUSYBOX echo -n "   3"
+	sleep 1
+	$BUSYBOX echo -n " 2"
+	sleep 1
+	$BUSYBOX echo -n " 1"
+	sleep 1
+	reboot
+else
+	$BUSYBOX echo "[*] Returning to menu"
+	sleep 3
+fi
+}
+
+
+
+als_disable()
+{
+# mount system as r/w
+$BUSYBOX mount -o remount rw /system
+$BUSYBOX echo ""
+$BUSYBOX echo "[ALS]"
+curals=`cat /sys/devices/i2c-0/0-0040/leds/lcd-backlight/als/enable`
+$BUSYBOX echo ""
+if [[ $curals == "1" ]]; then
+	$BUSYBOX echo "ALS is currently enabled"
+elif [[ $curals == "0" ]]; then
+	$BUSYBOX echo "ALS is currently disabled"
+fi
+sleep 4
+$BUSYBOX echo ""
+$BUSYBOX echo "[*] Disabling ALS"
+$BUSYBOX echo 0 > /sys/devices/i2c-0/0-0040/leds/lcd-backlight/als/enable
+$BUSYBOX mount -o remount ro /system
+$BUSYBOX echo ""
+$BUSYBOX echo "[*] ALS disabled..."
+sleep 3
+$BUSYBOX clear
+sync
+$BUSYBOX echo "[Q] Do you want to disable ALS at every"
+$BUSYBOX echo "    boot by creating an init.d script"
+$BUSYBOX echo ""
+$BUSYBOX echo "      (default = NO        y = create init.d)"
+read reup
+if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
+	$BUSYBOX clear
+	$BUSYBOX mount -o remount rw /system
+		if [[ -f /system/etc/init.d/85lps_disableals ]]; then
+			$BUSYBOX rm -f /system/etc/init.d/85lps_disableals
+		fi
+	$BUSYBOX echo "#!$BUSYBOX sh" >> /system/etc/init.d/85lps_disableals
+	$BUSYBOX echo "" >> /system/etc/init.d/85lps_disableals
+	$BUSYBOX echo "echo 0 > /sys/devices/i2c-0/0-0040/leds/lcd-backlight/als/enable" >> /system/etc/init.d/85lps_disableals
+	$BUSYBOX chmod 0755 /system/etc/init.d/85lps_disableals
+	$BUSYBOX mount -o remount ro /system
+	$BUSYBOX echo "[*] 85lps_disableals Init.d created.."
+	sleep 1
+fi
+$BUSYBOX echo "[*] Returning to menu..."
+als_led_menu
+}
+
+
+als_enable()
+{
+# mount system as r/w
+$BUSYBOX mount -o remount rw /system
+$BUSYBOX echo ""
+$BUSYBOX echo "[ALS]"
+curals=`cat /sys/devices/i2c-0/0-0040/leds/lcd-backlight/als/enable`
+$BUSYBOX echo ""
+if [[ $curals == "1" ]]; then
+	$BUSYBOX echo "ALS is currently enabled"
+elif [[ $curals == "0" ]]; then
+	$BUSYBOX echo "ALS is currently disabled"
+fi
+sleep 4
+$BUSYBOX echo ""
+$BUSYBOX echo "[*] Enabling ALS.."
+$BUSYBOX echo 1 > /sys/devices/i2c-0/0-0040/leds/lcd-backlight/als/enable
+sleep 2
+$
+if [[ -f /system/etc/init.d/85lps_disableals ]]; then
+	$BUSYBOX mount -o remount rw /system
+	$BUSYBOX rm -f /system/etc/init.d/85lps_disableals
+	$BUSYBOX mount -o remount ro /system
+	$BUSYBOX echo "[*] Removed 85lps_disableals init.d"
+fi
+$BUSYBOX echo ""
+sleep 2
+sync
+$BUSYBOX echo "[*] Returning to menu..."
+als_led_menu
+}
+
+
+bled_disable()
+{
+# mount system as r/w
+$BUSYBOX mount -o remount rw /system
+$BUSYBOX echo ""
+$BUSYBOX echo "[LED]"
+curbled=`cat /sys/devices/i2c-0/0-0040/leds/button-backlight/max_current`
+$BUSYBOX echo ""
+if [[ $curbled == "455" ]]; then
+	$BUSYBOX echo "Button Backlight is currently enabled"
+elif [[ $curbled == "1" ]]; then
+	$BUSYBOX echo "Button Backlight is currently disabled"
+fi
+sleep 4
+$BUSYBOX echo ""
+$BUSYBOX echo "[*] Disabling Button Backlight"
+$BUSYBOX echo 1 > /sys/devices/i2c-0/0-0040/leds/button-backlight/max_current
+$BUSYBOX mount -o remount ro /system
+$BUSYBOX echo ""
+$BUSYBOX echo "[*] Button Backlight disabled..."
+sleep 3
+$BUSYBOX clear
+sync
+$BUSYBOX echo "[Q] Do you want to disable LED's at every"
+$BUSYBOX echo "    boot by creating an init.d script"
+$BUSYBOX echo ""
+$BUSYBOX echo "      (default = NO        y = create init.d)"
+read reup
+if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
+	$BUSYBOX clear
+	$BUSYBOX mount -o remount rw /system
+		if [[ -f /system/etc/init.d/86lps_disablebled ]]; then
+			$BUSYBOX rm -f /system/etc/init.d/86lps_disablebled
+		fi
+	$BUSYBOX echo "#!$BUSYBOX sh" >> /system/etc/init.d/85lps_disablebled
+	$BUSYBOX echo "" >> /system/etc/init.d/86lps_disablebled
+	$BUSYBOX echo "echo 1 > /sys/devices/i2c-0/0-0040/leds/button-backlight/max_current" >> /system/etc/init.d/86lps_disablebled
+	$BUSYBOX chmod 0755 /system/etc/init.d/86lps_disablebled
+	$BUSYBOX mount -o remount ro /system
+	$BUSYBOX echo "[*] 86lps_disablebled Init.d created.."
+	sleep 1
+fi
+$BUSYBOX echo "[*] Returning to menu..."
+als_led_menu
+}
+
+
+
+bled_enable()
+{
+# mount system as r/w
+$BUSYBOX mount -o remount rw /system
+$BUSYBOX echo ""
+$BUSYBOX echo "[ALS]"
+curbled=`cat /sys/devices/i2c-0/0-0040/leds/button-backlight/max_current`
+$BUSYBOX echo ""
+if [[ $curbled == "455" ]]; then
+	$BUSYBOX echo "Button Backlight is currently enabled"
+elif [[ $curbled == "1" ]]; then
+	$BUSYBOX echo "Button Backlight is currently disabled"
+fi
+sleep 4
+$BUSYBOX echo ""
+$BUSYBOX echo "[*] Enabling ALS.."
+$BUSYBOX echo 455 > /sys/devices/i2c-0/0-0040/leds/button-backlight/max_current
+sleep 2
+if [[ -f /system/etc/init.d/86lps_disablbled ]]; then
+	$BUSYBOX mount -o remount rw /system
+	$BUSYBOX rm -f /system/etc/init.d/86lps_disabled
+	$BUSYBOX mount -o remount ro /system
+	$BUSYBOX echo "[*] Removed 85lps_disablebled init.d"
+fi
+$BUSYBOX echo ""
+sleep 2
+sync
+$BUSYBOX echo "[*] Returning to menu..."
+als_led_menu
+}
+
+
+
+frandom_enable()
+{
+# mount system as r/w
+$BUSYBOX mount -o remount rw /system
+$BUSYBOX echo ""
+$BUSYBOX echo "[FRANDOM]"
+if [[ -f /system/etc/init.d/76lps_frandom ]]; then $BUSYBOX rm -f /system/etc/init.d/76lps_frandom; sync; fi
+
+	# create init.d for min and max frequencies
+	$BUSYBOX echo "#!$BUSYBOX sh" >> /system/etc/init.d/76lps_frandom
+	$BUSYBOX echo "" >> /system/etc/init.d/76lps_frandom
+	$BUSYBOX echo "if [ -e /system/lib/modules/frandom.ko ]; then" >> /system/etc/init.d/76lps_frandom
+        $BUSYBOX echo "    insmod /system/lib/modules/frandom.ko" >> /system/etc/init.d/76lps_frandom
+       
+        $BUSYBOX echo "  if [ -e /dev/frandom ] && [ \"\`lsmod | grep ^frandom\`\" ]; then" >> /system/etc/init.d/76lps_frandom
+
+        $BUSYBOX echo "		chmod 644 /dev/frandom" >> /system/etc/init.d/76lps_frandom
+        $BUSYBOX echo "		mv /dev/random /dev/random.ori" >> /system/etc/init.d/76lps_frandom
+        $BUSYBOX echo "		mv /dev/urandom /dev/urandom.ori" >> /system/etc/init.d/76lps_frandom
+        $BUSYBOX echo "		ln /dev/frandom /dev/random" >> /system/etc/init.d/76lps_frandom
+        $BUSYBOX echo "		chmod 644 /dev/random" >> /system/etc/init.d/76lps_frandom
+        $BUSYBOX echo "		ln /dev/frandom /dev/urandom" >> /system/etc/init.d/76lps_frandom
+        $BUSYBOX echo "		chmod 644 /dev/urandom" >> /system/etc/init.d/76lps_frandom
+        $BUSYBOX echo "  fi" >> /system/etc/init.d/76lps_frandom
+	$BUSYBOX echo "fi" >> /system/etc/init.d/76lps_frandom
+	$BUSYBOX echo "" >> /system/etc/init.d/76lps_frandom
+	$BUSYBOX echo "" >> /system/etc/init.d/76lps_frandom
+	# link frandom module and load
+	$BUSYBOX ln -sf /res/frandom/frandom.ko /system/lib/modules/frandom.ko
+	$BUSYBOX insmod /system/lib/modules/frandom.ko	
+
+sleep 2
+$BUSYBOX chmod 0755 /system/etc/init.d/76lps_frandom
+$BUSYBOX echo "[*] Frandom enabled"
+if [ -e /system/lib/modules/frandom.ko ]; then
+       insmod /system/lib/modules/frandom.ko
+       
+       if [ -e /dev/frandom ] && [ "`lsmod | grep ^frandom`" ]; then
+
+               $BUSYBOX chmod 644 /dev/frandom
+               $BUSYBOX mv /dev/random /dev/random.ori
+               $BUSYBOX mv /dev/urandom /dev/urandom.ori
+               ln /dev/frandom /dev/random
+               $BUSYBOX chmod 644 /dev/random
+               ln /dev/frandom /dev/urandom
+               $BUSYBOX chmod 644 /dev/urandom
+       fi
+fi
+sleep 2.7
+}
+
+frandom_disable()
+{
+# mount system as r/w
+$BUSYBOX mount -o remount rw /system
+$BUSYBOX rmmod /system/lib/modules/frandom.ko
+$BUSYBOX rm /system/lib/modules/frandom.ko
+$BUSYBOX rm /system/etc/init.d/76lps_frandom
+$BUSYBOX echo ""
+$BUSYBOX echo "[*] frandom disabled"
+sleep 1
+$BUSYBOX echo "[i] frandom will not be disabled untill you reboot"
+$BUSYBOX echo ""
+sleep 1
+$BUSYBOX echo "[Q] Reboot now (default = NO   y = reboot)"
+# mount as r/o
+$BUSYBOX mount -o remount ro /system
+read reup
+
+if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
+	$BUSYBOX clear
+	$BUSYBOX echo "[*] Rebooting ...."
+	$BUSYBOX echo ""
+	$BUSYBOX echo -n "   3"
+	sleep 1
+	$BUSYBOX echo -n " 2"
+	sleep 1
+	$BUSYBOX echo -n " 1"
+	sleep 1
+	reboot
+else
+	$BUSYBOX echo "[*] Returning to menu"
+	sleep 3
+fi
+}
+
+
+selcpufreq()
+{
+$BUSYBOX mount -o remount rw /system
+$BUSYBOX clear
+maxfreq=`cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq`
+minfreq=`cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq`
+listfreq=`cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies | tr -s "[:blank:]" "\n"`
+$BUSYBOX echo "Current MAX:$maxfreq"
+$BUSYBOX echo "Current MIN:$minfreq"
+$BUSYBOX echo ""
+$BUSYBOX echo "Available Frequencies----"
+$BUSYBOX echo "$listfreq"
+$BUSYBOX echo ""
+$BUSYBOX echo -n "Select new MAX frequency:  "; read newmaxfreq; sync; if [[ $newmaxfreq == "768000" || $newmaxfreq == "806400" || $newmaxfreq == "921600" || $newmaxfreq == "1017600" || $newmaxfreq == "1113600" || $newmaxfreq == "1209600" || $newmaxfreq == "1305600" || $newmaxfreq == "1401600" || $newmaxfreq == "1516800" || $newmaxfreq == "1612800" || $newmaxfreq == "1708800" || $newmaxfreq == "1804800" ]]; then $BUSYBOX echo "$newmaxfreq" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq; sync; echo "MAX freq = $newmaxfreq"; else echo "If you want to set max frequency"; echo "below 768000, then use a CPU app";  sleep 3; $BUSYBOX clear; selcpufreq; fi 
+$BUSYBOX echo ""
+$BUSYBOX echo -n "Select new MIN frequency:  "; read newminfreq; sync; if [[ $newminfreq == "134400" || $newminfreq == "184320" || $newminfreq == "249600" || $newminfreq == "364800" || $newminfreq == "460800" || $newminfreq == "57600" || $newminfreq == "652800" || $newminfreq == "768000" || $newminfreq == "806400" || $newminfreq == "921600" || $newminfreq == "1017600" ]]; then $BUSYBOX echo "$newminfreq" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq; sync; echo "MIN freq = $newminfreq"; else echo "If you want to set min frequency"; echo "above 1017600, then use a CPU app"; sleep 3; $BUSYBOX clear; selcpufreq; fi
+$BUSYBOX mount -o remount ro /system
+sleep 2
+sync
+$BUSYBOX echo ""
+$BUSYBOX echo "[Q] Do you want to set these tweaks at every boot"
+$BUSYBOX echo "    by creating an init.d script"
+$BUSYBOX echo ""
+$BUSYBOX echo "       (default = NO       y = create init.d)"
+read reup
+
+if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
+	$BUSYBOX clear
+	$BUSYBOX mount -o remount rw /system
+
+	if [[ -f /system/etc/init.d/77lps_frequencies ]]; then $BUSYBOX rm -f /system/etc/init.d/77lps_frequencies; sync; fi
+
+	# create init.d for min and max frequencies
+	$BUSYBOX echo "#!$BUSYBOX sh" >> /system/etc/init.d/77lps_frequencies
+	$BUSYBOX echo "" >> /system/etc/init.d/77lps_frequencies
+	$BUSYBOX echo "echo "$newminfreq" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq" >> /system/etc/init.d/77lps_frequencies
+	$BUSYBOX echo "echo "$newmaxfreq" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq" >> /system/etc/init.d/77lps_frequencies
+	$BUSYBOX echo ""
+	$BUSYBOX chmod 0755 /system/etc/init.d/77lps_frequencies
+	$BUSYBOX mount -o remount ro /system
+	$BUSYBOX echo "[*] Created 77lps_frequencies in init.d directory"
+fi
+
+$BUSYBOX echo ""
+$BUSYBOX echo "[*] Frequencies now set"
+sleep 3
+$BUSYBOX clear; performance_menu
+}
+
+
+selgov()
+{
+$BUSYBOX mount -o remount rw /system
+$BUSYBOX clear
+curgov=`cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor`
+listgov=`cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors | tr -s "[[:blank:]]" "\n"`
+$BUSYBOX echo "Current GOVERNOR = $curgov"
+$BUSYBOX echo ""
+$BUSYBOX echo "Available Governors----"
+$BUSYBOX echo ""
+$BUSYBOX echo "$listgov"
+$BUSYBOX echo ""
+$BUSYBOX echo -n "Select new Governor:  "; read newgov; if grep -F "$newgov" /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors > /dev/null; then $BUSYBOX echo "$newgov" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor; echo "New governor = $newgov"; sleep 1.8; else $BUSYBOX echo "[e] $newgov is not a valid governor"; sleep 3; selgov; fi 
+$BUSYBOX echo ""
+$BUSYBOX mount -o remount ro /system
+sleep 2
+sync
+$BUSYBOX echo "[Q] Do you want to set this governor at every"
+$BUSYBOX echo "    boot by creating an init.d script"
+$BUSYBOX echo ""
+$BUSYBOX echo "       (default = NO       y = create init.d)"
+read reup
+
+if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
+	$BUSYBOX clear
+	$BUSYBOX mount -o remount rw /system
+
+		if [[ -f /system/etc/init.d/78lps_defgovernor ]]; then $BUSYBOX rm -f /system/etc/init.d/78lps_defgovernor; sync; fi
+	$BUSYBOX echo "#!$BUSYBOX sh" >> /system/etc/init.d/78lps_defgovernor
+	$BUSYBOX echo "" >> /system/etc/init.d/78lps_defgovernor
+	$BUSYBOX echo "echo "$newgov" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor" >> /system/etc/init.d/78lps_defgovernor
+	$BUSYBOX echo ""
+	$BUSYBOX chmod 0755 /system/etc/init.d/78lps_defgovernor
+	$BUSYBOX mount -o remount ro /system
+	$BUSYBOX echo "[*] Created 78lps_defgovernor in init.d directory"
+fi
+
+$BUSYBOX echo ""
+$BUSYBOX echo "[*] Governor now set"
+sleep 3
+$BUSYBOX clear; performance_menu
+}
+
+
+seliosched()
+{
+sync
+$BUSYBOX mount -o remount rw /system
+$BUSYBOX clear
+curiosched=`$BUSYBOX cat /sys/block/mmcblk0/queue/scheduler | $BUSYBOX sed 's/.*\[\([a-zA-Z0-9_]*\)\].*/\1/'`
+listio=`$BUSYBOX cat /sys/block/mmcblk0/queue/scheduler | tr -s "[[:blank:]]" "\n"`
+$BUSYBOX echo "Current IO-SCHEDULER = $curiosched"
+$BUSYBOX echo ""
+$BUSYBOX echo "Available Io-Schedulers----"
+$BUSYBOX echo ""
+$BUSYBOX echo "$listio"
+$BUSYBOX echo ""
+$BUSYBOX echo -n "Select new IO-Scheduler:  "; read newio;  if [[ $newio == "noop" || $newio == "anticipatory" || $newio == "deadline" || $newio == "cfq" || $newio == "bfq" || $newio == "sio" || $newio == "vr" || $newio == "zen" ]]; then $BUSYBOX echo "$newio" > /sys/block/mmcblk0/queue/scheduler; sync; echo "New io-scheduler = $newio"; else echo "$newio is not a valid scheduler"; sleep 3; $BUSYBOX clear; seliosched; fi 
+$BUSYBOX echo ""
+$BUSYBOX mount -o remount ro /system
+sleep 2
+sync
+$BUSYBOX echo "[Q] Do you want to set this IO-Scheduler at"
+$BUSYBOX echo "    every boot by creating an init.d script"
+$BUSYBOX echo ""
+$BUSYBOX echo "       (default = NO       y = create init.d)"
+read reup
+
+if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
+	$BUSYBOX clear
+	$BUSYBOX mount -o remount rw /system
+
+	if [[ -f /system/etc/init.d/79lps_defiosched ]]; then $BUSYBOX rm -f /system/etc/init.d/79lps_defiosched; sync; fi
+
+	$BUSYBOX echo "#!$BUSYBOX sh" >> /system/etc/init.d/79lps_defiosched
+	$BUSYBOX echo "" >> /system/etc/init.d/79lps_defiosched
+	$BUSYBOX echo "echo "$newio" > /sys/block/mmcblk0/queue/scheduler" >> /system/etc/init.d/79lps_defiosched
+	$BUSYBOX echo "" >> /system/etc/init.d/79lps_defiosched
+	$BUSYBOX chmod 0755 /system/etc/init.d/79lps_defiosched
+	$BUSYBOX mount -o remount ro /system
+	$BUSYBOX echo "[*] Created 79lps_defiosched in init.d directory"
+fi
+$BUSYBOX echo ""
+$BUSYBOX echo "[*] Scheduler now set"
+sleep 3
+$BUSYBOX clear; performance_menu
+}
+
+
+remove_init()
+{
+$BUSYBOX clear
+$BUSYBOX echo " Current LuPuS Kernel init.d's"
+$BUSYBOX echo ""
+$BUSYBOX echo "::NOTE:: This will only delete LuPuS init.d's"
+$BUSYBOX echo ""
+cd /system/etc/init.d
+	for file in `find *lps_* -type f`; do
+	$BUSYBOX echo $file
+	done
+cd ../../../
+$BUSYBOX echo ""
+$BUSYBOX echo -n "Delete one(1) OR Delete all(a)"; read reup
+
+if [[ $reup == "1" ]]; then
+	$BUSYBOX echo -n "Enter name of init.d to delete:"; read delname
+	$BUSYBOX rm -f /system/etc/init.d/$delname
+	$BUSYBOX echo "[*] Removed $delname"
+	sleep 2
+elif [[ $reup == "a" ]]; then
+	cd /system/etc/init.d
+	for del in `find *lps_* -type f`; do
+	$BUSYBOX rm -f $del
+	done
+	cd ../../../
+	$BUSYBOX clear
+	$BUSYBOX echo "[*] All LuPuS set init.d's have been removed"
+	sleep 2.8
+fi
+
+sleep 2.4
+$BUSYBOX clear; main_menu_opt
+}
+
+
+dirrat()
+{
+sync
+$BUSYBOX mount -o remount rw /system
+$BUSYBOX clear
+curdirat=`cat /proc/sys/vm/dirty_ratio`
+$BUSYBOX echo "Current Dirty Ratio = $curdirat"
+$BUSYBOX echo ""
+$BUSYBOX echo "Your value must be between 0 - 100"
+$BUSYBOX echo ""
+$BUSYBOX echo -n "Enter new value:  "; read newdirat
+$BUSYBOX echo ""
+if [[ $newdirat -ge "0" && $newdirat -le "100" ]]; then
+$BUSYBOX echo $newdirat > /proc/sys/vm/dirty_ratio
+$BUSYBOX echo "New dirty ratio value set at: $newdirat"
+else
+$BUSYBOX echo "Your value must be between 0 - 100"
+dirrat
+fi
+$BUSYBOX echo ""
+sync
+$BUSYBOX echo "[Q] Do you want to set this value at every"
+$BUSYBOX echo "    boot by creating an init.d script"
+$BUSYBOX echo ""
+$BUSYBOX echo "       (default = NO       y = create init.d)"
+read reup
+
+if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
+	$BUSYBOX clear
+$BUSYBOX mount -o remount rw /system
+
+if [[ -f /system/etc/init.d/71lps_vmtweaks ]]; then $BUSYBOX echo "[*] Adding values to current 71lps_vmtweaks"; sync; else $BUSYBOX echo "#!$BUSYBOX sh" >> /system/etc/init.d/71lps_vmtweaks; $BUSYBOX echo "" >> /system/etc/init.d/71lps_vmtweaks; fi
+
+	if grep -F "echo $curdirat > /proc/sys/vm/dirty_ratio" /system/etc/init.d/71lps_vmtweaks > /dev/null
+	then
+	   	 $BUSYBOX echo "[E] You have already set a value"
+	   	 $BUSYBOX echo ""
+	   	 $BUSYBOX echo "[i] Replacing $curdirat with new $newdirat" 
+	   	 $BUSYBOX sed -i "s/echo $curdirat > \/proc\/sys\/vm\/dirty_ratio/echo $newdirat > \/proc\/sys\/vm\/dirty_ratio/g" /system/etc/init.d/71lps_vmtweaks > /dev/null
+else
+		$BUSYBOX echo "echo $newdirat > /proc/sys/vm/dirty_ratio" >> /system/etc/init.d/71lps_vmtweaks
+		$BUSYBOX echo "[*] Created 71lps_vmtweaks in init.d directory"
+fi
+
+	$BUSYBOX chmod 0755 /system/etc/init.d/71lps_vmtweaks
+	$BUSYBOX mount -o remount ro /system
+fi
+
+$BUSYBOX echo ""
+$BUSYBOX echo "[*] Dirty ratio value now set"
+sleep 3
+$BUSYBOX clear; vm_menu
+}
+
+
+dirbakrat()
+{
+sync
+$BUSYBOX mount -o remount rw /system
+$BUSYBOX clear
+curdirbakat=`cat /proc/sys/vm/dirty_background_ratio`
+$BUSYBOX echo "Current Dirty Background Ratio = $curdirbakat"
+$BUSYBOX echo ""
+$BUSYBOX echo "Your value must be between 0 - 100"
+$BUSYBOX echo ""
+$BUSYBOX echo -n "Enter new value:  "; read newdirbakat
+$BUSYBOX echo ""
+
+if [[ $newdirbakat -ge "0" && $newdirbakat -le "100" ]]; then
+	$BUSYBOX echo $newdirbakat > /proc/sys/vm/dirty_background_ratio
+	$BUSYBOX echo "New dirty background ratio value set at: $newdirbakat"
+else
+	$BUSYBOX echo "Your value must be between 0 - 100"
+	dirbakat
+fi
+
+$BUSYBOX echo ""
+sync
+$BUSYBOX echo "[Q] Do you want to set this value at every"
+$BUSYBOX echo "    boot by creating an init.d script"
+$BUSYBOX echo ""
+$BUSYBOX echo "       (default = NO       y = create init.d)"
+read reup
+
+if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
+	$BUSYBOX clear
+	$BUSYBOX mount -o remount rw /system
+
+if [[ -f /system/etc/init.d/71lps_vmtweaks ]]; then $BUSYBOX echo "[*] Adding values to current 71lps_vmtweaks"; sync; else $BUSYBOX echo "#!$BUSYBOX sh" >> /system/etc/init.d/71lps_vmtweaks; $BUSYBOX echo "" >> /system/etc/init.d/71lps_vmtweaks; fi
+		
+		if grep -F "echo $curdirbakat > /proc/sys/vm/dirty_background_ratio" /system/etc/init.d/71lps_vmtweaks > /dev/null
+		then
+			    $BUSYBOX echo "[E] You have already set a value"
+			    $BUSYBOX echo ""
+			    $BUSYBOX echo "[i] Replacing $curdirbakat with new $newdirbakat" 
+			    $BUSYBOX sed -i "s/echo $curdirbakat > \/proc\/sys\/vm\/dirty_background_ratio/echo $newdirbakat > \/proc\/sys\/vm\/dirty_background_ratio/g" /system/etc/init.d/71lps_vmtweaks > /dev/null
+		else
+			    # create init.d for min and max frequencies
+			    $BUSYBOX echo "echo $newdirbakat > /proc/sys/vm/dirty_background_ratio" >> /system/etc/init.d/71lps_vmtweaks
+			    $BUSYBOX echo "[*] Created 71lps_vmtweaks in init.d directory"
+		fi
+	$BUSYBOX chmod 0755 /system/etc/init.d/71lps_vmtweaks
+	$BUSYBOX mount -o remount ro /system
+fi
+
+$BUSYBOX echo ""
+$BUSYBOX echo "[*] Dirty background ratio value now set"
+sleep 3
+$BUSYBOX clear; vm_menu
+}
+
+
+
+direxpcen()
+{
+sync
+$BUSYBOX mount -o remount rw /system
+$BUSYBOX clear
+curexpcent=`cat /proc/sys/vm/dirty_expire_centisecs`
+$BUSYBOX echo "Current Dirty Expire Centisecs = $curexpcent"
+$BUSYBOX echo ""
+$BUSYBOX echo "Your value must be between 0 - 500"
+$BUSYBOX echo ""
+$BUSYBOX echo -n "Enter new value:  "; read newexpcen
+$BUSYBOX echo ""
+
+if [[ $newexpcen -ge "0" && $newexpcen -le "500" ]]; then
+	$BUSYBOX echo $newexpcen > /proc/sys/vm/dirty_expire_centisecs
+	$BUSYBOX echo "New dirty expire centisecs value set at: $newexpcen"
+else
+	$BUSYBOX echo "Your value must be between 0 - 500"
+	direxpcen
+fi
+
+$BUSYBOX echo ""
+sync
+$BUSYBOX echo "[Q] Do you want to set this value at every"
+$BUSYBOX echo "    boot by creating an init.d script"
+$BUSYBOX echo ""
+$BUSYBOX echo "       (default = NO       y = create init.d)"
+read reup
+
+if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
+	$BUSYBOX clear
+	$BUSYBOX mount -o remount rw /system
+
+	if [[ -f /system/etc/init.d/71lps_vmtweaks ]]; then $BUSYBOX echo "[*] Adding values to current 71lps_vmtweaks"; sync; else $BUSYBOX 			$BUSYBOX echo "#!$BUSYBOX sh" >> /system/etc/init.d/71lps_vmtweaks; $BUSYBOX echo "" >> /system/etc/init.d/71lps_vmtweaks; fi
+
+		if grep -F "echo $curexpcen > /proc/sys/vm/dirty_expire_centisecs" /system/etc/init.d/71lps_vmtweaks > /dev/null
+		then
+			    $BUSYBOX echo "[E] You have already set a value"
+			    $BUSYBOX echo ""
+			    $BUSYBOX echo "[i] Replacing $curexpcen with new $newexpcen" 
+			    $BUSYBOX sed -i "s/echo $curexpcen > \/proc\/sys\/vm\/dirty_expire_centisecs/echo $newexpcen > \/proc\/sys\/vm\/dirty_expire_centisecs/g" /system/etc/init.d/71lps_vmtweaks > /dev/null
+		else
+		       	    # create init.d for min and max frequencies
+			    $BUSYBOX echo "echo $newexpcen > /proc/sys/vm/dirty_expire_centisecs" >> /system/etc/init.d/71lps_vmtweaks
+			    $BUSYBOX echo "[*] Created 71lps_vmtweaks in init.d directory"
+		fi
+	$BUSYBOX chmod 0755 /system/etc/init.d/71lps_vmtweaks
+	$BUSYBOX mount -o remount ro /system
+fi
+
+$BUSYBOX echo ""
+$BUSYBOX echo "[*] Dirty Expire Centisecs value now set"
+sleep 3
+$BUSYBOX clear; vm_menu
+}
+
+
+
+dirwricen()
+{
+sync
+$BUSYBOX mount -o remount rw /system
+$BUSYBOX clear
+curwricen=`cat /proc/sys/vm/dirty_writeback_centisecs`
+$BUSYBOX echo "Current Dirty WriteBack Centisecs = $curwricen"
+$BUSYBOX echo ""
+$BUSYBOX echo "Your value must be between 0 - 500"
+$BUSYBOX echo ""
+$BUSYBOX echo -n "Enter new value:  "; read newwricen
+$BUSYBOX echo ""
+
+if [[ $newwricen -ge "0" && $newwricen -le "500" ]]; then
+	$BUSYBOX echo $newwricen > /proc/sys/vm/dirty_expire_centisecs
+	$BUSYBOX echo "New dirty writeback centisecs value set at: $newexpcen"
+else
+	$BUSYBOX echo "Your value must be between 0 - 500"
+	dirwricen
+fi
+
+$BUSYBOX echo ""
+sync
+$BUSYBOX echo "[Q] Do you want to set this value at every"
+$BUSYBOX echo "    boot by creating an init.d script"
+$BUSYBOX echo ""
+$BUSYBOX echo "       (default = NO       y = create init.d)"
+read reup
+
+if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
+	$BUSYBOX clear
+	$BUSYBOX mount -o remount rw /system
+	
+	if [[ -f /system/etc/init.d/71lps_vmtweaks ]]; then $BUSYBOX echo "[*] Adding values to current 71lps_vmtweaks"; sync; else $BUSYBOX 			$BUSYBOX echo "#!$BUSYBOX sh" >> /system/etc/init.d/71lps_vmtweaks; $BUSYBOX echo "" >> /system/etc/init.d/71lps_vmtweaks; fi
+
+		if grep -F "echo $curwricen > /proc/sys/vm/dirty_writeback_centisecs" /system/etc/init.d/71lps_vmtweaks > /dev/null
+		then
+    			$BUSYBOX echo "[E] You have already set a value"
+    			$BUSYBOX echo ""
+    			$BUSYBOX echo "[i] Replacing $curwricen with new $newwricen" 
+    			$BUSYBOX sed -i "s/echo $curwricen > \/proc\/sys\/vm/\dirty_writeback_centisecs/echo $newwricen > \/proc\/sys\/vm\/dirty_writeback_centisecs/g" /system/etc/init.d/71lps_vmtweaks > /dev/null
+		else
+			# create init.d for min and max frequencies
+			$BUSYBOX echo "echo $newwricen > /proc/sys/vm/dirty_writeback_centisecs" >> /system/etc/init.d/71lps_vmtweaks
+			$BUSYBOX echo "[*] Created 71lps_vmtweaks in init.d directory"
+		fi
+
+	$BUSYBOX chmod 0755 /system/etc/init.d/71lps_vmtweaks
+	$BUSYBOX mount -o remount ro /system
+fi
+
+$BUSYBOX echo ""
+$BUSYBOX echo "[*] Dirty Writeback Centisecs value now set"
+sleep 3
+$BUSYBOX clear; vm_menu
+}
+
+
+minfkb()
+{
+sync
+$BUSYBOX mount -o remount rw /system
+$BUSYBOX clear
+curmfkb=`cat /proc/sys/vm/min_free_kbytes`
+$BUSYBOX echo "Current Minfree kbytes = $curmfkb"
+$BUSYBOX echo ""
+$BUSYBOX echo "Your value must be between 0 - 8192"
+$BUSYBOX echo ""
+$BUSYBOX echo -n "Enter new value:  "; read newmfkb
+$BUSYBOX echo ""
+
+if [[ $newmfkb -ge "0" && $newmfkb -le "8192" ]]; then
+	$BUSYBOX echo $newmfkb > /proc/sys/vm/min_free_kbytes
+	$BUSYBOX echo "New minfree kbytes value set at: $newmfkb"
+else
+	$BUSYBOX echo "Your value must be between 0 - 8192"
+	minfkb
+fi
+
+$BUSYBOX echo ""
+sync
+$BUSYBOX echo "[Q] Do you want to set this value at every"
+$BUSYBOX echo "    boot by creating an init.d script"
+$BUSYBOX echo ""
+$BUSYBOX echo "       (default = NO       y = create init.d)"
+read reup
+
+if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
+	$BUSYBOX clear
+	$BUSYBOX mount -o remount rw /system
+if [[ -f /system/etc/init.d/71lps_vmtweaks ]]; then $BUSYBOX echo "[*] Adding values to current 71lps_vmtweaks"; sync; else $BUSYBOX echo "#!$BUSYBOX sh" >> /system/etc/init.d/71lps_vmtweaks; $BUSYBOX echo "" >> /system/etc/init.d/71lps_vmtweaks; fi
+
+	if grep -F "echo $curmfkb > /proc/sys/vm/min_free_kbytes" /system/etc/init.d/71lps_vmtweaks > /dev/null
+	then
+		    $BUSYBOX echo "[E] You have already set a value"
+    		    $BUSYBOX echo ""
+    		    $BUSYBOX echo "[i] Replacing $curmkfb with new $newmkfb" 
+    		    $BUSYBOX sed -i "s/echo $curmkfb > \/proc\/sys\/vm\/min_free_kbytes/echo $newmkfb > \/proc\/sys\/vm\/min_free_kbytes/g" /system/etc/init.d/71lps_vmtweaks > /dev/null
+	else
+		    # create init.d for min and max frequencies
+		    $BUSYBOX echo "echo $newmfkb > /proc/sys/vm/min_free_kbytes" >> /system/etc/init.d/71lps_vmtweaks
+		    $BUSYBOX echo "[*] Created 71lps_vmtweaks in init.d directory"
+	fi
+	$BUSYBOX chmod 0755 /system/etc/init.d/71lps_vmtweaks
+	$BUSYBOX mount -o remount ro /system
+fi
+
+$BUSYBOX echo ""
+$BUSYBOX echo "[*] Minfree kbytes value now set"
+sleep 3
+$BUSYBOX clear; vm_menu
+}
+
+
+ovrcmtrat()
+{
+sync
+$BUSYBOX mount -o remount rw /system
+$BUSYBOX clear
+curoct=`cat /proc/sys/vm/overcommit_ratio`
+$BUSYBOX echo "Current Overcommit Ratio = $curoct"
+$BUSYBOX echo ""
+$BUSYBOX echo "Your value must be between 0 - 100"
+$BUSYBOX echo ""
+$BUSYBOX echo -n "Enter new value:  "; read newoct
+$BUSYBOX echo ""
+
+if [[ $newoct -ge "0" && $newoct -le "100" ]]; then
+		$BUSYBOX echo $newoct > /proc/sys/vm/overcommit_ratio
+		$BUSYBOX echo "New overcommit ratio value set at: $newoct"
+else
+		$BUSYBOX echo "Your value must be between 0 - 100"
+		ovrcmtrat
+fi
+$BUSYBOX echo ""
+sync
+$BUSYBOX echo "[Q] Do you want to set this value at every"
+$BUSYBOX echo "    boot by creating an init.d script"
+$BUSYBOX echo ""
+$BUSYBOX echo "       (default = NO       y = create init.d)"
+read reup
+
+if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
+	$BUSYBOX clear
+	$BUSYBOX mount -o remount rw /system
+
+		if [[ -f /system/etc/init.d/71lps_vmtweaks ]]; then $BUSYBOX echo "[*] Adding values to current 71lps_vmtweaks"; sync; else 			$BUSYBOX echo "#!$BUSYBOX sh" >> /system/etc/init.d/71lps_vmtweaks; $BUSYBOX echo "" >> /system/etc/init.d/71lps_vmtweaks; fi
+	if grep -F "echo $curoct > /proc/sys/vm/overcommit_ratio" /system/etc/init.d/71lps_vmtweaks > /dev/null
+	then
+	    $BUSYBOX echo "[E] You have already set a value"
+	    $BUSYBOX echo ""
+	    $BUSYBOX echo "[i] Replacing $curoct with new $newoct" 
+	    $BUSYBOX sed -i "s/echo $curoct > \/proc\/sys\/vm\/overcommit_ratio/echo $newoct > \/proc\/sys\/vm\/overcommit_ratio/g" /system/etc/init.d/71lps_vmtweaks > /dev/null
+	else
+	    # create init.d for min and max frequencies
+	    $BUSYBOX echo "[*] Created 71lps_vmtweaks in init.d directory"
+	    $BUSYBOX echo "echo $newoct > /proc/sys/vm/overcommit_ratio" >> /system/etc/init.d/71lps_vmtweaks
+	fi
+	$BUSYBOX chmod 0755 /system/etc/init.d/71lps_vmtweaks
+	$BUSYBOX mount -o remount ro /system
+fi
+
+$BUSYBOX echo ""
+$BUSYBOX echo "[*] Overcommit Ratio value now set"
+sleep 3
+$BUSYBOX clear; vm_menu
+}
+
+
+swpness()
+{
+sync
+$BUSYBOX mount -o remount rw /system
+$BUSYBOX clear
+curswp=`cat /proc/sys/vm/swappiness`
+$BUSYBOX echo "Current Swappiness = $curswp"
+$BUSYBOX echo ""
+$BUSYBOX echo "Your value must be between 0 - 100"
+$BUSYBOX echo ""
+$BUSYBOX echo -n "Enter new value:  "; read newswp
+$BUSYBOX echo ""
+
+if [[ $newswp -ge "0" && $newswp -le "100" ]]; then
+	$BUSYBOX echo $newswp > /proc/sys/vm/swappiness
+	$BUSYBOX echo "New swappiness value set at: $newswp"
+else
+	$BUSYBOX echo "Your value must be between 0 - 100"
+	swpness
+fi
+
+$BUSYBOX echo ""
+sync
+$BUSYBOX echo "[Q] Do you want to set this value at every"
+$BUSYBOX echo "    boot by creating an init.d script"
+$BUSYBOX echo ""
+$BUSYBOX echo "       (default = NO       y = create init.d)"
+read reup
+
+if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
+	$BUSYBOX clear
+	$BUSYBOX mount -o remount rw /system
+	if [[ -f /system/etc/init.d/71lps_vmtweaks ]]; then $BUSYBOX echo "[*] Adding values to current 71lps_vmtweaks"; sync; else $BUSYBOX 		echo "#!$BUSYBOX sh" >> /system/etc/init.d/71lps_vmtweaks; $BUSYBOX echo "" >> /system/etc/init.d/71lps_vmtweaks; fi
+	if grep -F "echo $curswp > /proc/sys/vm/swappiness" /system/etc/init.d/71lps_vmtweaks > /dev/null
+	then
+    		$BUSYBOX echo "[E] You have already set a value"
+    		$BUSYBOX echo ""
+    		$BUSYBOX echo "[i] Replacing $curswp with new $newswp" 
+    		$BUSYBOX sed -i "s/echo $curswp > \/proc\/sys\/vm\/swappiness/echo $newswp > \/proc\/sys\/vm\/swappiness/g" /system/etc/init.d/71lps_vmtweaks > /dev/null
+	else
+		# create init.d for min and max frequencies
+		$BUSYBOX echo "[*] Created 71lps_vmtweaks in init.d directory"
+		$BUSYBOX echo "echo $newswp > /proc/sys/vm/swappiness" >> /system/etc/init.d/71lps_vmtweaks
+	fi
+	$BUSYBOX chmod 0755 /system/etc/init.d/71lps_vmtweaks
+	$BUSYBOX mount -o remount ro /system
+fi
+$BUSYBOX echo ""
+$BUSYBOX echo "[*] Swappiness value now set"
+sleep 3
+$BUSYBOX clear; vm_menu
+}
+
+
+vcacpres()
+{
+sync
+$BUSYBOX mount -o remount rw /system
+$BUSYBOX clear
+curvcp=`cat /proc/sys/vm/vfs_cache_pressure`
+$BUSYBOX echo "Current VFS Cache Pressure = $curvcp"
+$BUSYBOX echo ""
+$BUSYBOX echo "Your value must be between 0 - 200"
+$BUSYBOX echo ""
+$BUSYBOX echo -n "Enter new value:  "; read newvcp
+$BUSYBOX echo ""
+if [[ $newvcp -ge "0" && $newvcp -le "100" ]]; then
+	$BUSYBOX echo $newvcp > /proc/sys/vm/vfs_cache_pressure
+	$BUSYBOX echo "New swappiness value set at: $newvcp"
+else
+	$BUSYBOX echo "Your value must be between 0 - 100"
+	vcacpres
+fi
+$BUSYBOX echo ""
+sync
+$BUSYBOX echo "[Q] Do you want to set this value at every"
+$BUSYBOX echo "    boot by creating an init.d script"
+$BUSYBOX echo ""
+$BUSYBOX echo "       (default = NO       y = create init.d)"
+read reup
+if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
+	$BUSYBOX clear
+	$BUSYBOX mount -o remount rw /system
+
+if [[ -f /system/etc/init.d/71lps_vmtweaks ]]; then $BUSYBOX echo "[*] Adding values to current 71lps_vmtweaks"; sync; else $BUSYBOX echo "#!$BUSYBOX sh" >> /system/etc/init.d/71lps_vmtweaks; $BUSYBOX echo "" >> /system/etc/init.d/71lps_vmtweaks; fi
+
+	# check if line exists
+	if grep -F "echo $curvcp > /proc/sys/vm/vfs_cache_pressure" /system/etc/init.d/71lps_vmtweaks > /dev/null
+	then
+    		$BUSYBOX echo "[E] You have already set a value"
+    		$BUSYBOX echo ""
+    		$BUSYBOX echo "[i] Replacing $curvcp with new $newvcp" 
+    		$BUSYBOX sed -i "s/echo $curvcp > \/proc\/sys\/vm\/vfs_cache_pressure/echo $newvcp > \/proc\/sys\/vm\/vfs_cache_pressure/g" /system/etc/init.d/71lps_vmtweaks
+	else
+		# create init.d for min and max frequencies
+		$BUSYBOX echo "[*] Created 71lps_vmtweaks in init.d directory"
+		$BUSYBOX echo "echo $newvcp > /proc/sys/vm/vfs_cache_pressure" >> /system/etc/init.d/71lps_vmtweaks
+	fi
+
+	$BUSYBOX chmod 0755 /system/etc/init.d/71lps_vmtweaks
+	$BUSYBOX mount -o remount ro /system
+fi
+
+$BUSYBOX echo ""
+$BUSYBOX echo "[*] VFS Cache Pressure value now set"
+sleep 3
+$BUSYBOX clear; vm_menu
+}
+
+
+remove_log()
+{
+$BUSYBOX clear
+$BUSYBOX mount -o remount rw /system
+$BUSYBOX echo "[*] Removing android logger"
+$BUSYBOX rm -f /dev/log/main
+$BUSYBOX mount -o remount ro /system
+sleep 2
+$BUSYBOX echo ""
+$BUSYBOX echo "[*] Complete..."
+sleep 3
+$BUSYBOX clear
+sleep 1
+sync
+$BUSYBOX echo "[Q] Do you want to set this value at every"
+$BUSYBOX echo "    boot by creating an init.d script"
+$BUSYBOX echo ""
+$BUSYBOX echo "       (default = NO       y = create init.d)"
+read reup
+if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
+	$BUSYBOX clear
+	$BUSYBOX mount -o remount rw /system
+		if [[ -f /system/etc/init.d/80lps_removelog ]]; then
+			$BUSYBOX rm -f /system/etc/init.d/80lps_removelog
+		fi
+	$BUSYBOX echo "#!$BUSYBOX sh" >> /system/etc/init.d/80lps_removelog
+	$BUSYBOX echo "" >> /system/etc/init.d/80lps_removelog
+	$BUSYBOX echo "rm -f /dev/log/main"  >> /system/etc/init.d/80lps_removelog
+	$BUSYBOX chmod 0755 /system/etc/init.d/80lps_removelog
+	$BUSYBOX echo "[*] Created 80lps_removelog as init.d"
+	$BUSYBOX mount -o remount ro /system
+else
+	$BUSYBOX echo "[*] Log removed..."
+fi
+
+$BUSYBOX echo ""
+sleep 2.3
+tweak_menu
+}
+
+speed_sd()
+{
+$BUSYBOX clear
+$BUSYBOX mount -o remount rw /system
+$BUSYBOX echo "[*] Applying sdcard speed tweak"
+$BUSYBOX echo "2048" > /sys/devices/virtual/bdi/179:0/read_ahead_kb
+sleep 2
+$BUSYBOX echo "[*] Complete..."
+sleep 3
+$BUSYBOX clear
+sleep 1
+sync
+$BUSYBOX echo "[Q] Do you want to set this value at every"
+$BUSYBOX echo "    boot by creating an init.d script"
+$BUSYBOX echo ""
+$BUSYBOX echo "       (default = NO       y = create init.d)"
+read reup
+
+	if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
+		$BUSYBOX clear
+		$BUSYBOX mount -o remount rw /system
+
+		if [[ -f /system/etc/init.d/81lps_sdcardspeed ]]; then
+			$BUSYBOX rm -f /system/etc/init.d/81lps_sdcardspeed
+		fi
+
+		$BUSYBOX echo "#!$BUSYBOX sh" >> /system/etc/init.d/81lps_sdcardspeed
+		$BUSYBOX echo "" >> /system/etc/init.d/81lps_sdcardspeed
+		$BUSYBOX echo "echo 2048 >> /sys/devices/virtual/bdi/179:0/read_ahead_kb"  >> /system/etc/init.d/81lps_sdcardspeed
+		$BUSYBOX chmod 0755 /system/etc/init.d/81lps_sdcardspeed
+		$BUSYBOX echo "[*] Created 81lps_sdcardspeed as init.d"
+		$BUSYBOX mount -o remount ro /system
+else
+		$BUSYBOX echo "[*] SD card speed tweak applied.."
+fi
+
+$BUSYBOX echo ""
+sleep 2.3
+tweak_menu
+}
+
+
+non_rotate()
+{
+# Flags blocks as non-rotational and increases cache size
+$BUSYBOX clear
+$BUSYBOX echo "[*] Flagging blocks as non-rotational"
+$BUSYBOX echo ""
+
+LOOP=`ls -d /sys/block/loop*`;
+RAM=`ls -d /sys/block/ram*`;
+MMC=`ls -d /sys/block/mmc*`;
+for j in $LOOP $RAM
+do
+	$BUSYBOX echo "0" > $j/queue/rotational;
+	$BUSYBOX echo "2048" > $j/queue/read_ahead_kb;
+done
+sync
+$BUSYBOX echo ""
+$BUSYBOX echo "[*] Complete..."
+sleep 3
+$BUSYBOX clear
+$BUSYBOX echo "[Q] Do you want to set this tweak at every"
+$BUSYBOX echo "    boot by creating an init.d script"
+$BUSYBOX echo ""
+$BUSYBOX echo "       (default = NO       y = create init.d)"
+read reup
+
+if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
+	$BUSYBOX clear
+	$BUSYBOX mount -o remount rw /system
+		if [[ -f /system/etc/init.d/82lps_rotate ]]; then
+			$BUSYBOX rm -f /system/etc/init.d/82lps_rotate
+		fi
+	$BUSYBOX echo "#!$BUSYBOX sh" >> /system/etc/init.d/82lps_rotate
+	$BUSYBOX echo "" >> /system/etc/init.d/82lps_rotate
+	$BUSYBOX echo 'LOOP=`ls -d /sys/block/loop*`;' >> /system/etc/init.d/82lps_rotate
+	$BUSYBOX echo 'RAM=`ls -d /sys/block/ram*`;' >> /system/etc/init.d/82lps_rotate
+	$BUSYBOX echo 'MMC=`ls -d /sys/block/mmc*`;' >> /system/etc/init.d/82lps_rotate
+	$BUSYBOX echo "for j in \$LOOP \$RAM" >> /system/etc/init.d/82lps_rotate
+	$BUSYBOX echo do >> /system/etc/init.d/82lps_rotate
+	$BUSYBOX echo "echo 0 > $j/queue/rotational;" >> /system/etc/init.d/82lps_rotate
+	$BUSYBOX echo "echo 2048 > $j/queue/read_ahead_kb;" >> /system/etc/init.d/82lps_rotate
+	$BUSYBOX echo "done" >> /system/etc/init.d/82lps_rotate
+	$BSUYBOX chmod 0755 /system/etc/init.d/82lps_rotate
+	$BUSYBOX echo "[*] Created 82lps_rotate as init.d"
+	$BUSYBOX mount -o remount ro /system
+else
+	$BUSYBOX echo "[*] Flag blocks as non-rotational applied.."
+fi
+
+sleep 3
+tweak_menu
+}
+
+
+#add_block()
+#{
+#if [[ -f /system/etc/hosts.org && -f /system/etc/hosts ]]; then
+#	$BUSYBOX echo "Do you want to remove add blocking??"
+#	$BUSYBOX echo ""
+#	$BUSYBOX echo "y = yes      default = no "
+#	read anwsr
+#	$BUSYBOX echo ""
+#
+#	if [[ $anwsr == "y" || $anwsr == "Y" ]]; then
+#		$BUSYBOX mount -o remount rw /system
+#		$BUSYBOX rm -f /system/etc/hosts
+#		$BUSYBOX mv /system/etc/hosts.org /system/etc/hosts
+#		$BUSYBOX mount -o remount ro /system
+#		$BUSYBOX echo "[*] Add blocking removed"
+#		sleep 1
+#		$BUSYBOX echo "[*] Reverted to original hosts file"
+#		$BUSYBOX echo ""
+#		$BUSYBOX echo "[i] Run this option again if you "
+#		sleep 1
+#		$BUSYBOX echo "[*] want to re-enable add blocking "
+#		sleep 3
+#	fi
+#else
+#	$BUSYBOX echo "[i] Blocks adds or as many as possible."
+#	$BUSYBOX echo ""
+#	$BUSYBOX echo "[*] Copying host file"
+#	$BUSYBOX mount -o remount rw /system
+#
+#		if [[ -f /system/etc/hosts.org && -f /system/etc/hosts ]]; then
+#		$BUSYBOX rm -f /system/etc/hosts
+#		fi
+#
+#	$BUSYBOX mv /system/etc/hosts /system/etc/hosts.org
+#	$BUSYBOX echo "[i] Unlzma'ing add host file"
+#	$BUSYBOX lzcat /res/add/hosts.lzma >> /system/etc/hosts
+#	$BUSYBOX chmod 0644 /system/etc/hosts
+#		# make sure nothing went wrong
+#		if [[ ! -f /system/etc/hosts ]]; then
+#			$BUSYBOX mv /system/etc/hosts.org /system/etc/hosts
+#			$BUSYBOX echo "[e] Something went wrong.."
+#			$BUSYBOX echo "[*] Copying back original hosts file."
+#		fi
+#fi
+#
+#sleep 1.4
+#$BUSYBOX mount -o remount ro /system
+#$BUSYBOX echo "[*] Complete..."
+#$BUSYBOX echo ""
+#sleep 3
+#tweak_menu
+#}
+
+
+#remove_add_block()
+#{
+#$BUSYBOX echo "[*] Removing Add blocking..."
+#$BUSYBOX mount -o remount rw /system
+#$BUSYBOX rm -f /system/etc/hosts
+#$BUSYBOX mv /system/etc/hosts.org /system/etc/hosts
+#$BUSYBOX mount -o remount ro /system
+#sleep 2
+#$BUSYBOX echo ""
+#$BUSYBOX echo "[*] Add blocking removed"
+#sleep 1
+#$BUSYBOX echo "[*] Reverted to original hosts file"
+#sleep 1
+#$BUSYBOX echo ""
+#$BUSYBOX echo "[i] Run this option again if you "
+#sleep 1
+#$BUSYBOX echo "[*] want to re-enable add blocking "
+#sleep 3
+#clean_up
+#}
+
+kernel_info()
+{
+$BUSYBOX clear
+$BUSYBOX echo "          K E R N E L     I N F O"
+$BUSYBOX echo ""
+$BUSYBOX echo ""
+$BUSYBOX echo "              Enter option ---"
+$BUSYBOX echo ""
+$BUSYBOX echo ""
+$BUSYBOX echo "             1/ View LuPuS Kernel OP"
+$BUSYBOX echo "             2/ View Menu Info"
+$BUSYBOX echo "             3/ Donate to me :) "
+$BUSYBOX echo ""
+$BUSYBOX echo "             R/ Return to main menu"
+read num
+case $num in
+	1) $BUSYBOX clear; su -c "LD_LIBRARY_PATH=/vendor/lib:/system/lib am start http://goo.gl/zaX4g"; main_menu_opt;;
+	2) $BUSYBOX clear; su -c "LD_LIBRARY_PATH=/vendor/lib:/system/lib am start http://goo.gl/XltIY"; main_menu_opt;;
+	3) $BUSYBOX clear; su -c "LD_LIBRARY_PATH=/vendor/lib:/system/lib am start http://goo.gl/5896I"; main_menu_opt;;
+	r|R) $BUSYBOX clear; main_menu_opt;;
+	*) $BUSYBOX echo "$num is not a valid option"; sleep 3; $BUSYBOX clear; cifs_menu;
+esac
+}
+
+
+selvddcon()
+{
+$BUSYBOX clear
+while :; do
+VDD=/sys/devices/system/cpu/cpu0/cpufreq/vdd_levels
+$BUSYBOX cat $VDD
+$BUSYBOX echo ""
+$BUSYBOX echo -n "Choose frequency to modify: "; read FREQ
+current_vdd=`grep "$FREQ" /sys/devices/system/cpu/cpu0/cpufreq/vdd_levels | cut -d':' -f2 | sed -e 's/^[ \t]*//'`
+
+# if user enters q|Q,r|R then exit loop and return to performance menu 
+if [[ $FREQ = "Q" || $FREQ == "q" || $FREQ == "r" || $FREQ == "R" ]]; then
+	$BUSYBOX clear
+	$BUSYBOX echo "[$FREQ] Exiting ..."
+	sleep 2
+	break
+fi
+
+valid_freq=`grep -F "$FREQ" $VDD | cut -d':' -f1 | sed -e 's/^[ \t]*//'`
+
+if [[ "$valid_freq" -eq "$FREQ" && $FREQ = *[^0-9]* ]]; then
+	freqvdd=`grep "$FREQ" $VDD | cut -d':' -f2 | sed -e 's/^[ \t]*//'`
+
+
+	# show current voltage for that frequency
+	$BUSYBOX echo "Current voltage for $FREQ is $freqvdd"
+	$BUSYBOX echo ""
+	# enter new frequency
+	$BUSYBOX echo -n "Enter new voltage for $FREQ:  "; read newvdd
+
+		# check if the vdd entered is valid (3 or 4 numbers long and make sure is numbers only).
+		check_num=`echo $newvdd | grep -oE "[[:digit:]]" | wc -l`
+		checkit=`echo $newvdd | tr -dc '[:digit:]'`
+		if [[ $checkit = $newvdd && $check_num == "3" || $check_num == "4" ]]; then
+			sleep 1
+		else
+			$BUSYBOX clear
+			$BUSYBOX echo "[e] $newvdd is an invalid voltage.."
+			sleep 1.5
+			$BUSYBOX echo "[*] Please try again.."
+			sleep 2.5
+			$BUSYBOX clear
+			selvddcon
+		fi
+	
+
+		# replace old voltage with new one
+		$BUSYBOX echo "$FREQ $newvdd" > $VDD
+		sleep 1
+		$BUSYBOX clear
+		$BUSYBOX echo "[Q] Do you want to set this value at every"
+		$BUSYBOX echo "    boot by creating an init.d script"
+		$BUSYBOX echo ""
+		$BUSYBOX echo "       (default = NO       y = create init.d)"
+		read reup
+
+		if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
+			$BUSYBOX clear
+			$BUSYBOX mount -o remount rw /system
+
+			if [[ -f /system/etc/init.d/83lps_vdd ]]; then 
+				$BUSYBOX echo "[*] Adding values to current 83lps_vdd"
+				
+				sleep 2
+				$BUSYBOX clear
+				# returns vale+0 so remove the zero with being piped to sed again
+				previous_vdd=`$BUSYBOX cat /system/etc/init.d/83lps_vdd | $BUSYBOX grep "echo $FREQ" | $BUSYBOX sed "s/echo $FREQ//g" | tr -dc "[[:digit:]]" | $BUSYBOX sed 's/0//'`
+
+		     # check if the last frequency has a value set already
+		     if grep -F "echo $FREQ $previous_vdd > /sys/devices/system/cpu/cpu0/cpufreq/vdd_levels" /system/etc/init.d/83lps_vdd > /dev/null
+		      then
+   			 $BUSYBOX echo "[E] You have already set a value for $FREQ"
+			 sleep 2
+   			 $BUSYBOX echo ""
+			 $BUSYBOX sed -i "s/echo $FREQ $previous_vdd > \/sys\/devices\/system\/cpu\/cpu0\/cpufreq\/vdd_levels/echo $FREQ $newvdd > \/sys\/devices\/system\/cpu\/cpu0\/cpufreq\/vdd_levels/g" /system/etc/init.d/83lps_vdd
+			 $BUSYBOX echo "[i] Old value has been replaced..."
+			 sleep 2
+			 $BUSYBOX clear
+		     else
+				$BUSYBOX echo "echo "$FREQ $newvdd" > $VDD" >> /system/etc/init.d/83lps_vdd
+		     fi
+
+			else 
+				$BUSYBOX echo "#!$BUSYBOX sh" >> /system/etc/init.d/83lps_vdd
+				$BUSYBOX echo "" >> /system/etc/init.d/83lps_vdd
+  		         	$BUSYBOX echo "echo "$FREQ $newvdd" > $VDD" >> /system/etc/init.d/83lps_vdd
+				$BUSYBOX echo "[*] Created new 83lps_vdd in init.d folder"
+			  	sleep 2
+				$BUSYBOX clear
+			fi
+
+
+			$BUSYBOX chmod 0755 /system/etc/init.d/83lps_vdd
+			$BUSYBOX mount -o remount ro /system
+			$BUSYBOX clear
+		fi		
+else
+	$BUSYBOX clear
+	$BUSYBOX echo "[e] $FREQ is an invalid frequency.."
+	sleep 1.5
+	$BUSYBOX echo "[*] Please try again.."
+	sleep 2.5
+	$BUSYBOX clear
+fi
+done
+
+sleep 1
+performance_menu
+}
+
+
+##################################################    M E N U 'S  ###################################################3###########
+
+
+clean_up()
+{
+$BUSYBOX clear
+$BUSYBOX echo ""
+$BUSYBOX echo "                [CLEAN UP]"
+$BUSYBOX echo ""
+$BUSYBOX echo ""
+$BUSYBOX echo ""
+$BUSYBOX echo ""
+$BUSYBOX echo "       Choose from the following??"
+$BUSYBOX echo ""
+$BUSYBOX echo "             1/ Force first boot startup"
+$BUSYBOX echo "             2/ Remove init.d's"
+#$BUSYBOX echo "             3/ Remove Add Blocking"
+$BUSYBOX echo ""
+$BUSYBOX echo "             R/ Return to main menu"
+read num
+case $num in
+	1) $BUSYBOX clear; reset_markers;;
+	2) $BUSYBOX clear; remove_init;;
+#	3) $BUSYBOX clear; remove_add_block;;
+	r|R) $BUSYBOX clear; main_menu_opt;;
+	*) $BUSYBOX echo "$num is not a valid option"; sleep 3; $BUSYBOX clear; tweak_menu;
+esac
+}
+
+
+cifs_menu()
+{
+$BUSYBOX clear
+$BUSYBOX echo ""
+$BUSYBOX echo "    [CIFS INFO]"
+$BUSYBOX echo ""
+$BUSYBOX echo "Common Internet File System (CIFS) operates as an"
+$BUSYBOX echo "application-layer network protocol mainly used for"
+$BUSYBOX echo "providing shared access to files, printers,"
+$BUSYBOX echo "serial ports and miscellaneous communications"
+$BUSYBOX echo "between nodes on a network."
+$BUSYBOX echo ""
+$BUSYBOX echo ""
+$BUSYBOX echo "       Choose from the following??"
+$BUSYBOX echo ""
+$BUSYBOX echo "             1/ Enable"
+$BUSYBOX echo "             2/ Disable"
+$BUSYBOX echo ""
+$BUSYBOX echo "             R/ Return to main menu"
+read num
+case $num in
+	1) $BUSYBOX clear; cifs_enable;;
+	2) $BUSYBOX clear; cifs_disable;;
+	r|R) $BUSYBOX clear; main_menu_opt;;
+	*) $BUSYBOX echo "$num is not a valid option"; sleep 3; $BUSYBOX clear; cifs_menu;
+esac
+}
+
+
+zram_menu()
+{
+$BUSYBOX clear
+$BUSYBOX echo ""
+$BUSYBOX echo "    [ZRAM INFO]"
+$BUSYBOX echo ""
+$BUSYBOX echo "zRam (AKA. Compache) increases performance by"
+$BUSYBOX echo "avoiding paging on disk and instead uses a compressed"
+$BUSYBOX echo "block device in RAM in which paging takes place until"
+$BUSYBOX echo "it is necessary to use the swap space on the hard"
+$BUSYBOX echo "disk drive. Since using RAM is faster than using"
+$BUSYBOX echo "disks, zRam allows Linux to make more use of RAM"
+$BUSYBOX echo "when swapping/paging is required."
+$BUSYBOX echo ""
+$BUSYBOX echo ""
+$BUSYBOX echo "        Choose from the following"
+$BUSYBOX echo ""
+$BUSYBOX echo ""
+$BUSYBOX echo "             1/ Enable"
+$BUSYBOX echo "             2/ Disable"
+$BUSYBOX echo "             3/ Set zRam size"
+$BUSYBOX echo ""
+$BUSYBOX echo "             R/ Return to main menu"
+read num
+case $num in
+	1) $BUSYBOX clear; zram_enable;;
+	2) $BUSYBOX clear; zram_disable;;
+	3) $BUSYBOX clear; zram_size;;
+	r|R) $BUSYBOX clear; main_menu_opt;;
+	*) $BUSYBOX echo "$num is not a valid option"; sleep 3; $BUSYBOX clear; zram_menu;
+esac
+}
+
+usb_otg_menu()
+{
+$BUSYBOX clear
+$BUSYBOX echo ""
+$BUSYBOX echo "    [USB-OTG INFO]"
+$BUSYBOX echo ""
+$BUSYBOX echo "USB On-The-Go, is a specification that allows"
+$BUSYBOX echo "USB such as digital audio players or mobile phones"
+$BUSYBOX echo "to act as a host, allowing other USB devices"
+$BUSYBOX echo "like a USB flash drive, mouse, or keyboard to"
+$BUSYBOX echo "be attached to them. Unlike conventional USB"
+$BUSYBOX echo "systems, USB OTG systems can drop the hosting"
+$BUSYBOX echo "role and act as normal USB devices when attached"
+$BUSYBOX echo "to another host. This can be u$BUSYBOX sed to allow a" 
+$BUSYBOX echo "mobile phone to act as host for a flash drive"
+$BUSYBOX echo "and read its contents, downloading music for" 
+$BUSYBOX echo "instance, but then act as a flash drive when" 
+$BUSYBOX echo "plugged into a host computer and allow the "
+$BUSYBOX echo "host to read off the new content."
+$BUSYBOX echo ""
+$BUSYBOX echo " Do you want to Enable or Disable of USB-OTG??"
+$BUSYBOX echo ""
+$BUSYBOX echo "        1/ Enable"
+$BUSYBOX echo "        2/ Disable"
+$BUSYBOX echo ""
+$BUSYBOX echo "        R/ Return to main men"
+read num
+case $num in
+	1) $BUSYBOX clear; usb_otg_enable;;
+	2) $BUSYBOX clear; usb_otg_disable;;
+	r|R) $BUSYBOX clear; main_menu_opt;;
+	*) $BUSYBOX echo "$num is not a valid option"; sleep 3; $BUSYBOX clear; usb_otg_menu;
+  esac
+}
+
+
+als_led_menu()
+{
+$BUSYBOX clear
+$BUSYBOX echo ""
+$BUSYBOX echo "    [ALS and Button Backlight]"
+$BUSYBOX echo ""
+$BUSYBOX echo "This option disables ALS or re-enables it"
+$BUSYBOX echo "depending... It also enables/diasbales LED"
+$BUSYBOX echo "button backlight which I believe is seriously bright."
+$BUSYBOX echo "You will then have the option to set this at "
+$BUSYBOX echo "every boot."
+$BUSYBOX echo ""
+$BUSYBOX echo ""
+$BUSYBOX echo "        Choose from the following"
+$BUSYBOX echo ""
+$BUSYBOX echo ""
+$BUSYBOX echo "             1/ Enable ALS"
+$BUSYBOX echo "             2/ Disable ALS"
+$BUSYBOX echo "             3/ Enable Button Backlight"
+$BUSYBOX echo "             4/ Disable Button Backlight"
+$BUSYBOX echo ""
+$BUSYBOX echo "             R/ Return to main menu"
+read num
+case $num in
+	1) $BUSYBOX clear; als_enable;;
+	2) $BUSYBOX clear; als_disable;;
+	3) $BUSYBOX clear; bled_enable;;
+	4) $BUSYBOX clear; bled_disable;;
+	r|R) $BUSYBOX clear; main_menu_opt;;
+	*) $BUSYBOX echo "$num is not a valid option"; sleep 3; $BUSYBOX clear; als_led_menu;
+esac
+}
+
+
+frandom_menu()
+{
+$BUSYBOX clear
+$BUSYBOX echo ""
+$BUSYBOX echo "    [FRANDOM INFO]"
+$BUSYBOX echo ""
+$BUSYBOX echo "/dev/frandom is a fast alternative to "
+$BUSYBOX echo "/dev/urandom It implements a random number "
+$BUSYBOX echo "generator, which is 10-50 times faster than what"
+$BUSYBOX echo "you get from Linux' built-in /dev/urandom."
+$BUSYBOX echo ""
+$BUSYBOX echo ""
+$BUSYBOX echo "       Choose from the following??"
+$BUSYBOX echo ""
+$BUSYBOX echo "             1/ Enable"
+$BUSYBOX echo "             2/ Disable"
+$BUSYBOX echo ""
+$BUSYBOX echo "             R/ Return to main menu"
+read num
+case $num in
+	1) $BUSYBOX clear; frandom_enable;;
+	2) $BUSYBOX clear; frandom_disable;;
+	r|R) $BUSYBOX clear; main_menu_opt;;
+	*) $BUSYBOX echo "$num is not a valid option"; sleep 3; $BUSYBOX clear; frandom_menu;
+esac
+}
+
+
+reset_markers()
+{
+$BUSYBOX clear
+$BUSYBOX echo ""
+$BUSYBOX echo "    [RESET]"
+$BUSYBOX echo ""
+$BUSYBOX echo "Removes all marker files which are created on boot"
+$BUSYBOX echo "for LuPuS Kernel, these include Wifi & Autoroot"
+$BUSYBOX echo "Markers. If you have a problem with either ROOT or"
+$BUSYBOX echo "WIFI it is recommended to wipe these. "
+$BUSYBOX echo ""
+$BUSYBOX echo ""
+$BUSYBOX echo "        Do you want to Wipe Marker files??"
+$BUSYBOX echo ""
+$BUSYBOX echo "            1/ Yes"
+$BUSYBOX echo ""
+$BUSYBOX echo "            R/ Return to main menu"
+read num
+case $num in
+	1) $BUSYBOX clear; markers; break;;
+	r|R) $BUSYBOX clear; main_menu_opt;;
+	*) $BUSYBOX echo "$num is not a valid option"; sleep 3; $BUSYBOX clear; reset_markers;
+ esac
+}
+
+
+
+tweak_menu()
+{
+$BUSYBOX clear
+$BUSYBOX echo "       T W E A K     O P T I O N S "
+$BUSYBOX echo ""
+$BUSYBOX echo ""
+$BUSYBOX echo "  Choose from the following options-"
+$BUSYBOX echo "    :: Tweaks will reset at boot::"
+$BUSYBOX echo ""
+$BUSYBOX echo "   1/ Clean all tmp unused/ unneeded files"
+$BUSYBOX echo "   2/ SQLITE3 optimization at next boot"
+$BUSYBOX echo "   3/ Low Memory Killer Optimizations"
+$BUSYBOX echo "   4/ Kernel Memory Tweaks"
+$BUSYBOX echo "   5/ Network Optimizations"
+$BUSYBOX echo "   6/ Defend against ARP-Spoofing"
+$BUSYBOX echo "   7/ Remove Android Logger"
+$BUSYBOX echo "   8/ Micro SDcard speed tweak"
+$BUSYBOX echo "   9/ Flag blocks as non-rotational"
+#$BUSYBOX echo "   10/ Add Blocking"
+$BUSYBOX echo ""
+$BUSYBOX echo "   R/ Return to menu"
+$BUSYBOX echo ""
+$BUSYBOX echo "    Enter option now:"
+read num
+case $num in
+	1) $BUSYBOX clear; clean ;;
+	2) $BUSYBOX clear; optsql ;;
+	3) $BUSYBOX clear; LMK ;;
+	4) $BUSYBOX clear; KMT ;;
+	5) $BUSYBOX clear; NOP ;;
+	6) $BUSYBOX clear; WIFI ;;
+	7) $BUSYBOX clear; remove_log ;;
+	8) $BUSYBOX clear; speed_sd ;;
+	9) $BUSYBOX clear; non_rotate ;;
+#	10) $BUSYBOX clear; add_block ;;
+	r|R) $BUSYBOX clear; main_menu_opt;;
+	*) $BUSYBOX echo "$num is not a valid option"; sleep 3; $BUSYBOX clear; tweak_menu;
+ esac
+}
+
+
+vm_menu()
+{
+$BUSYBOX clear
+$BUSYBOX echo "               V M     T W E A K S "
+$BUSYBOX echo ""
+$BUSYBOX echo ""
+$BUSYBOX echo "  Choose from the following options-"
+$BUSYBOX echo ""
+$BUSYBOX echo "   1/ Dirty ratio"
+$BUSYBOX echo "   2/ Dirty background ratio"
+$BUSYBOX echo "   3/ Dirty expire centisecs"
+$BUSYBOX echo "   4/ Dirty writeback centisecs"
+$BUSYBOX echo "   5/ Minfree Kbytes"
+$BUSYBOX echo "   6/ Overcommit ratio"
+$BUSYBOX echo "   7/ Swappiness"
+$BUSYBOX echo "   8/ VFS cache pressure"
+$BUSYBOX echo ""
+$BUSYBOX echo "   R/ Return to menu"
+$BUSYBOX echo ""
+$BUSYBOX echo "    Enter option now:"
+read num
+case $num in
+	1) $BUSYBOX clear; dirrat ;;
+	2) $BUSYBOX clear; dirbakrat ;;
+	3) $BUSYBOX clear; direxpcen ;;
+	4) $BUSYBOX clear; dirwricen ;;
+	5) $BUSYBOX clear; minfkb ;;
+	6) $BUSYBOX clear; ovrcmtrat ;;
+	7) $BUSYBOX clear; swpness ;;
+	8) $BUSYBOX clear; vcacpres ;;
+	r|R) $BUSYBOX clear; performance_menu;;
+	*) $BUSYBOX echo "$num is not a valid option"; sleep 3; $BUSYBOX clear; vm_menu;
+ esac
+}
+
+
+performance_menu()
+{
+$BUSYBOX clear
+$BUSYBOX echo "     P E R F O R M A N C E    C O N T R O L"
+$BUSYBOX echo ""
+$BUSYBOX echo ""
+$BUSYBOX echo "  Choose from the following options-"
+$BUSYBOX echo ""
+$BUSYBOX echo "   1/ Set CPU Frequencies"
+$BUSYBOX echo "   2/ Set Governors"
+$BUSYBOX echo "   3/ Set IO-Schedulers"
+$BUSYBOX echo "   4/ Voltage Control"
+$BUSYBOX echo "   5/ VM Tweaks"
+#$BUSYBOX echo "   6/ Governor Tweaks"
+#$BUSYBOX echo "   7/ IO Tweaks"
+$BUSYBOX echo ""
+$BUSYBOX echo "   R/ Return to menu"
+$BUSYBOX echo ""
+$BUSYBOX echo "    Enter option now:"
+read num
+case $num in
+	1) $BUSYBOX clear; selcpufreq ;;
+	2) $BUSYBOX clear; selgov ;;
+	3) $BUSYBOX clear; seliosched ;;
+	4) $BUSYBOX clear; selvddcon ;;
+	5) $BUSYBOX clear; vm_menu ;;
+#	6) $BUSYBOX clear; govtweak ;;
+#	7) $BUSYBOX clear; ioschedtweak ;;
+	r|R) $BUSYBOX clear; main_menu_opt;;
+	*) $BUSYBOX echo "$num is not a valid option"; sleep 3; $BUSYBOX clear; performance_menu;
+ esac
+}
+
+
+recovery_menu()
+{
+$BUSYBOX clear
+$BUSYBOX echo ""
+$BUSYBOX echo "    [RECOVERY INFO]"
+$BUSYBOX echo ""
+$BUSYBOX echo "This Option is used to select your choice of recovery"
+$BUSYBOX echo "Choose between TWRP Recovery (v2.4.3.0) which is a"
+$BUSYBOX echo "full touch supported recovery, with quick backups"
+$BUSYBOX echo "and restoring. Or the CWM recovery (v6.0.2.7)."
+$BUSYBOX echo "If no recovery is selected default is CWM."
+$BUSYBOX echo ""
+$BUSYBOX echo ""
+$BUSYBOX echo "        Choose from the following??"
+$BUSYBOX echo ""
+$BUSYBOX echo "            1/ TWRP"
+$BUSYBOX echo "            2/ CWM"
+$BUSYBOX echo "            3/ Check recovery"
+$BUSYBOX echo ""
+$BUSYBOX echo "            R/ Return to main menu"
+read num
+case $num in
+	1) $BUSYBOX clear; TWRP_choice;;
+	2) $BUSYBOX clear; CWM_choice;;
+	3) $BUSYBOX clear; check_version;;
+	r|R) $BUSYBOX clear; main_menu_opt;;
+	*) $BUSYBOX echo "$num is not a valid option"; sleep 3; $BUSYBOX clear; recovery_menu;
+esac
+}
+
+
+
+main_menu_opt()
+{
+if [ "`id | grep =0`" ]; then 
+$BUSYBOX clear
+else
+$BUSYBOX clear
+$BUSYBOX echo "[e] You are not running script as SuperUser (su)"
+$BUSYBOX echo ""
+sleep 2
+$BUSYBOX echo "    Exiting script in:"
+$BUSYBOX echo ""
+$BUSYBOX echo ""
+sleep 2
+$BUSYBOX echo "            3"
+$BUSYBOX echo ""
+sleep 1
+$BUSYBOX echo "            2"
+$BUSYBOX echo ""
+sleep 1
+$BUSYBOX echo "            1"
+$BUSYBOX echo ""
+sleep 1
+$BUSYBOX clear
+exit
+fi
+$BUSYBOX echo ""
+$BUSYBOX echo "       L u P u S     K E R N E L     M E N U "
+$BUSYBOX echo ""
+$BUSYBOX echo ""
+$BUSYBOX echo "	Choose from the following options-"
+$BUSYBOX echo ""
+$BUSYBOX echo ""
+$BUSYBOX echo "          1/ CIFS options"
+$BUSYBOX echo "          2/ Zram options"
+$BUSYBOX echo "          3/ Frandom"
+$BUSYBOX echo "          4/ USB-OTG options"
+$BUSYBOX echo "          5/ ALS & button backlight"
+$BUSYBOX echo "          6/ Clean & remove tweaks"
+$BUSYBOX echo "          7/ Tweak options"
+$BUSYBOX echo "          8/ Choose Recovery"
+$BUSYBOX echo "          9/ Performance Menu"
+$BUSYBOX echo "          10/ Kernel Info"
+$BUSYBOX echo ""
+$BUSYBOX echo "          Q/ Quit LuPuS script"
+$BUSYBOX echo ""
+$BUSYBOX echo "	   Enter option now:"
+$BUSYBOX echo ""
+read num
+case $num in
+	1) $BUSYBOX clear; cifs_menu;;
+	2) $BUSYBOX clear; zram_menu;;
+	3) $BUSYBOX clear; frandom_menu;;
+	4) $BUSYBOX clear; usb_otg_menu;;
+	5) $BUSYBOX clear; als_led_menu;;
+	6) $BUSYBOX clear; clean_up;;
+	7) $BUSYBOX clear; tweak_menu;;
+	8) $BUSYBOX clear; recovery_menu;;
+	9) $BUSYBOX clear; performance_menu;;
+	10) $BUSYBOX clear; kernel_info;;
+	q|Q) $BUSYBOX clear; exit;;
+	*) $BUSYBOX echo "$num is not a valid option"; sleep 3; $BUSYBOX clear; main_menu_opt;
+esac
+}
+
+while :
+do
+	main_menu_opt
+done
