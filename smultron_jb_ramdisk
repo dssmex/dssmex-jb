@@ -9,6 +9,20 @@ MKBOOTFS=$TOOLS_DIR/mkbootfs
 MKBOOTIMG=$TOOLS_DIR/mkbootimg
 
 
+if [[ -f $PRM/ramdisk/res/dummyfileforgit ]]; then
+echo "Removing dummyfilesforgit"
+echo
+
+for i in `find $PRM -iname "dummyfileforgit"`; do
+				rm $i
+				clear; echo "Removing --"
+				echo 
+				echo "$i"
+				sleep 0.3
+				done
+fi
+
+echo
 echo "Cleaning from previous build.."
 echo
 # remove previous
@@ -19,14 +33,12 @@ rm -f $PRM/ramdisk/sbin/*~
 rm -f $PRM/ramdisk/sbin/*.bz2
 rm -f $PRM/ramdisk/sbin/*.lzma
 rm $PRM/ramdisk/init
-rm -rf $PRM/ramdisk/res/modules
+rm -f $PRM/ramdisk/res/modules/*
 
 # link init every build
 cd $PRM/ramdisk
 ln -s /sbin/init.sh init
 cd ..
-
-mkdir $PRM/ramdisk/res/modules
 
 echo
 echo "Creating boot.img, standby..."
