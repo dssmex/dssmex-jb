@@ -2,14 +2,14 @@
 TOPDIR=$(cd $(dirname "$0"); pwd)
 HOME=$TOPDIR/..
 TOOLS_DIR=$HOME/scripts/tools
-PRM=$TOPDIR/ramdisk_play
+PRM=$TOPDIR/ramdisk_zeus
 
 STRIP=$HOME/toolchains/arm-eabi-linaro-4.7.2/bin/arm-eabi-strip
 MKBOOTFS=$TOOLS_DIR/mkbootfs
 MKBOOTIMG=$TOOLS_DIR/mkbootimg
 
 
-if [[ -f $PRM/ramdisk/res/dummyfileforgit ]]; then
+clear
 echo "Removing dummyfilesforgit"
 echo
 
@@ -20,7 +20,6 @@ for i in `find $PRM -iname "dummyfileforgit"`; do
 				echo "$i"
 				sleep 0.3
 				done
-fi
 
 echo
 echo "Cleaning from previous build.."

@@ -9,7 +9,7 @@ MKBOOTFS=$TOOLS_DIR/mkbootfs
 MKBOOTIMG=$TOOLS_DIR/mkbootimg
 
 
-if [[ -f $PRM/ramdisk/res/dummyfileforgit ]]; then
+clear
 echo "Removing dummyfilesforgit"
 echo
 
@@ -20,7 +20,6 @@ for i in `find $PRM -iname "dummyfileforgit"`; do
 				echo "$i"
 				sleep 0.3
 				done
-fi
 
 echo
 echo "Cleaning from previous build.."
@@ -39,7 +38,6 @@ rm -f $PRM/ramdisk/res/modules/*
 cd $PRM/ramdisk
 ln -s /sbin/init.sh init
 cd ..
-
 
 echo
 echo "Creating boot.img, standby..."
