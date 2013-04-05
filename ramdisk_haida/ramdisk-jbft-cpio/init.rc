@@ -4,8 +4,8 @@
 # This is a common source of Android security bugs.
 #
 
-import /init.usb.rc
 import /init.${ro.hardware}.rc
+import /init.usb.rc
 import /init.trace.rc
 
 on early-init
@@ -202,6 +202,7 @@ on post-fs-data
 
     # create basic filesystem structure
     mkdir /data/misc 01771 system misc
+    mkdir /data/misc/bluetoothd 0770 bluetooth bluetooth
     mkdir /data/misc/adb 02750 system shell
     mkdir /data/misc/bluedroid 0770 bluetooth net_bt_stack
     mkdir /data/misc/bluetooth 0770 system system
@@ -360,9 +361,6 @@ on boot
     setprop net.tcp.buffersize.evdo    4096,87380,563200,4096,16384,262144
     setprop net.tcp.buffersize.evdo_b  4096,87380,704512,4096,16384,262144
 
-# Run LuPuS script
-    exec /sbin/lupus-script.sh
-
 # Set this property so surfaceflinger is not started by system_init
     setprop system_init.startsurfaceflinger 0
 
@@ -492,6 +490,21 @@ service bootanim /system/bin/bootanimation
     group graphics
     disabled
     oneshot
+
+service dbus /system/bin/dbus-daemon --system --nofork
+    class main
+    socket dbus stream 660 bluetooth bluetooth
+    user bluetooth
+    group bluetooth net_bt_admin
+
+service bluetoothd /system/bin/bluetoothd -n
+    class main
+    socket bluetooth stream 660 bluetooth bluetooth
+    socket dbus_bluetooth stream 660 bluetooth bluetooth
+    # init.rc does not yet support applying capabilities, so run as root and
+    # let bluetoothd drop uid to bluetooth with the right linux capabilities
+    group bluetooth net_bt_admin misc
+    disabled
 
 service installd /system/bin/installd
     class main

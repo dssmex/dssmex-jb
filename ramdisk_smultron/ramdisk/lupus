@@ -161,9 +161,9 @@ sleep 2
 $BUSYBOX rmmod /system/lib/modules/nls_utf8.ko
 $BUSYBOX rmmod /system/lib/modules/md4.ko
 $BUSYBOX rmmod /system/lib/modules/cifs.ko
-rm /system/lib/modules/nls_utf8.ko
-rm /system/lib/modules/md4.ko
-rm /system/lib/modules/cifs.ko
+$BUSYBOX rm /system/lib/modules/nls_utf8.ko
+$BUSYBOX rm /system/lib/modules/md4.ko
+$BUSYBOX rm /system/lib/modules/cifs.ko
 $BUSYBOX echo "[i] In the case of no errors, no reboot required!"
 sleep 1
 $BUSYBOX echo ""
@@ -302,7 +302,7 @@ if  [ -e /data/system/userbehavior.db ]; then
 fi
 # disable usuage stats
 if  [ -d /data/system/usagestats ]; then
-	chmod 0400 /data/system/usagestats > /dev/null 2>&1
+	$BUSYBOX chmod 0400 /data/system/usagestats > /dev/null 2>&1
 fi
 # disable app usage stats
 if  [ -d /data/system/appusagestats ]; then
@@ -599,36 +599,38 @@ $BUSYBOX echo "    by creating an init.d script"
 $BUSYBOX echo ""
 $BUSYBOX echo "  (default = NO        y = create init.d)"
 read reup
+
 if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
-$BUSYBOX clear
-$BUSYBOX mount -o remount rw system
-# Turn on Source Address Verification in all interfaces.
-$BUSYBOX echo "#!$BUSYBOX sh" >> /system/etc/init.d/73lps_spoof
-$BUSYBOX echo "" >> /system/etc/init.d/73lps_spoof
-$BUSYBOX echo "$BUSYBOX echo 1 >> /proc/sys/net/ipv4/conf/all/rp_filter" >> /system/etc/init.d/73lps_spoof
-$BUSYBOX echo "$BUSYBOX echo 1 >> /proc/sys/net/ipv4/conf/default/rp_filter" >> /system/etc/init.d/73lps_spoof
-# Do not accept ICMP redirects.
-$BUSYBOX echo "$BUSYBOX echo 0 >> /proc/sys/net/ipv4/conf/all/accept_redirects" >> /system/etc/init.d/73lps_spoof
-$BUSYBOX echo "$BUSYBOX echo 0 >> /proc/sys/net/ipv4/conf/default/accept_redirects" >> /system/etc/init.d/72lps_spoof
-# Do not send ICMP redirects.
-$BUSYBOX echo "$BUSYBOX echo 0 >> /proc/sys/net/ipv4/conf/all/send_redirects" >> /system/etc/init.d/73lps_spoof
-$BUSYBOX echo "$BUSYBOX echo 0 >> /proc/sys/net/ipv4/conf/default/send_redirects" >> /system/etc/init.d/73lps_spoof
-# Ignore ICMP broadcasts will stop gateway from responding to broadcast pings.
-$BUSYBOX echo "$BUSYBOX echo 1 >> /proc/sys/net/ipv4/icmp_echo_ignore_broadcasts" >> /system/etc/init.d/73lps_spoof
-# Ignore bogus ICMP errors.
-$BUSYBOX echo "$BUSYBOX echo 1 >> /proc/sys/net/ipv4/icmp_ignore_bogus_error_responses" >> /system/etc/init.d/73lps_spoof
-# Do not accept IP source route packets.
-$BUSYBOX echo "$BUSYBOX echo 0 >> /proc/sys/net/ipv4/conf/all/accept_source_route" >> /system/etc/init.d/73lps_spoof
-$BUSYBOX echo "$BUSYBOX echo 0 >> /proc/sys/net/ipv4/conf/default/accept_source_route" >> /system/etc/init.d/73lps_spoof
-# Turn on log Martian Packets with impossible addresses.
-$BUSYBOX echo "$BUSYBOX echo 1 >> /proc/sys/net/ipv4/conf/all/log_martians" >> /system/etc/init.d/73lps_spoof
-$BUSYBOX echo "$BUSYBOX echo 1 >> /proc/sys/net/ipv4/conf/default/log_martians" >> /system/etc/init.d/73lps_spoof
-$BUSYBOX echo ""
-$BUSYBOX chmod 0755 /system/etc/init.d/73lps_spoof
-$BUSYBOX mount -o remount ro /system
-$BUSYBOX echo "[*] Created 73lps_spoof in init.d directory"
-sleep 2
+	$BUSYBOX clear
+	$BUSYBOX mount -o remount rw system
+	# Turn on Source Address Verification in all interfaces.
+	$BUSYBOX echo "#!$BUSYBOX sh" >> /system/etc/init.d/73lps_spoof
+	$BUSYBOX echo "" >> /system/etc/init.d/73lps_spoof
+	$BUSYBOX echo "$BUSYBOX echo 1 >> /proc/sys/net/ipv4/conf/all/rp_filter" >> /system/etc/init.d/73lps_spoof
+	$BUSYBOX echo "$BUSYBOX echo 1 >> /proc/sys/net/ipv4/conf/default/rp_filter" >> /system/etc/init.d/73lps_spoof
+	# Do not accept ICMP redirects.
+	$BUSYBOX echo "$BUSYBOX echo 0 >> /proc/sys/net/ipv4/conf/all/accept_redirects" >> /system/etc/init.d/73lps_spoof
+	$BUSYBOX echo "$BUSYBOX echo 0 >> /proc/sys/net/ipv4/conf/default/accept_redirects" >> /system/etc/init.d/72lps_spoof
+	# Do not send ICMP redirects.
+	$BUSYBOX echo "$BUSYBOX echo 0 >> /proc/sys/net/ipv4/conf/all/send_redirects" >> /system/etc/init.d/73lps_spoof
+	$BUSYBOX echo "$BUSYBOX echo 0 >> /proc/sys/net/ipv4/conf/default/send_redirects" >> /system/etc/init.d/73lps_spoof
+	# Ignore ICMP broadcasts will stop gateway from responding to broadcast pings.
+	$BUSYBOX echo "$BUSYBOX echo 1 >> /proc/sys/net/ipv4/icmp_echo_ignore_broadcasts" >> /system/etc/init.d/73lps_spoof
+	# Ignore bogus ICMP errors.
+	$BUSYBOX echo "$BUSYBOX echo 1 >> /proc/sys/net/ipv4/icmp_ignore_bogus_error_responses" >> /system/etc/init.d/73lps_spoof
+	# Do not accept IP source route packets.
+	$BUSYBOX echo "$BUSYBOX echo 0 >> /proc/sys/net/ipv4/conf/all/accept_source_route" >> /system/etc/init.d/73lps_spoof
+	$BUSYBOX echo "$BUSYBOX echo 0 >> /proc/sys/net/ipv4/conf/default/accept_source_route" >> /system/etc/init.d/73lps_spoof
+	# Turn on log Martian Packets with impossible addresses.
+	$BUSYBOX echo "$BUSYBOX echo 1 >> /proc/sys/net/ipv4/conf/all/log_martians" >> /system/etc/init.d/73lps_spoof
+	$BUSYBOX echo "$BUSYBOX echo 1 >> /proc/sys/net/ipv4/conf/default/log_martians" >> /system/etc/init.d/73lps_spoof
+	$BUSYBOX echo ""
+	$BUSYBOX chmod 0755 /system/etc/init.d/73lps_spoof
+	$BUSYBOX mount -o remount ro /system
+	$BUSYBOX echo "[*] Created 73lps_spoof in init.d directory"
+	sleep 2
 fi
+
 $BUSYBOX echo "[INIT.D] Defence against ARP spoofing set...."
 sleep 2
 tweak_menu
@@ -664,20 +666,21 @@ $BUSYBOX echo "  (default = NO      y = reboot)"
 # mount as r/o
 $BUSYBOX mount -o remount ro /system
 read reup
+
 if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
-$BUSYBOX clear
-$BUSYBOX echo "[*] Rebooting ...."
-$BUSYBOX echo ""
-$BUSYBOX echo -n "   3"
-sleep 1
-$BUSYBOX echo -n " 2"
-sleep 1
-$BUSYBOX echo -n " 1"
-sleep 1
-reboot
+	$BUSYBOX clear
+	$BUSYBOX echo "[*] Rebooting ...."
+	$BUSYBOX echo ""
+	$BUSYBOX echo -n "   3"
+	sleep 1
+	$BUSYBOX echo -n " 2"
+	sleep 1
+	$BUSYBOX echo -n " 1"
+	sleep 1
+	reboot
 else
-$BUSYBOX echo "[*] Returning to menu"
-sleep 3
+	$BUSYBOX echo "[*] Returning to menu"
+	sleep 3
 fi
 }
 
@@ -697,20 +700,21 @@ $BUSYBOX echo "[Q] Reboot now (default = NO   y = reboot)"
 # mount as r/o
 $BUSYBOX mount -o remount ro /system
 read reup
+
 if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
-$BUSYBOX clear
-$BUSYBOX echo "[*] Rebooting ...."
-$BUSYBOX echo ""
-$BUSYBOX echo -n "   3"
-sleep 1
-$BUSYBOX echo -n " 2"
-sleep 1
-$BUSYBOX echo -n " 1"
-sleep 1
-reboot
+	$BUSYBOX clear
+	$BUSYBOX echo "[*] Rebooting ...."
+	$BUSYBOX echo ""
+	$BUSYBOX echo -n "   3"
+	sleep 1
+	$BUSYBOX echo -n " 2"
+	sleep 1
+	$BUSYBOX echo -n " 1"
+	sleep 1
+	reboot
 else
-$BUSYBOX echo "[*] Returning to menu"
-sleep 3
+	$BUSYBOX echo "[*] Returning to menu"
+	sleep 3
 fi
 }
 
@@ -726,6 +730,7 @@ read ZRS
 if [ -f /system/ect/init.d/74lps_zram ]; then
 	$BUSYBOX rm /system/ect/init.d/74lps_zram
 fi
+
 $BUSYBOX echo "#!$BUSYBOX sh" >> /system/etc/init.d/74lps_zram
 $BUSYBOX echo "# by::wedgess:: for LuPuS Kernel" >> /system/etc/init.d/74lps_zram
 $BUSYBOX echo "" >> /system/etc/init.d/74lps_zram
@@ -779,11 +784,13 @@ $BUSYBOX echo ""
 $BUSYBOX echo "[ALS]"
 curals=`cat /sys/devices/i2c-0/0-0040/leds/lcd-backlight/als/enable`
 $BUSYBOX echo ""
+
 if [[ $curals == "1" ]]; then
 	$BUSYBOX echo "ALS is currently enabled"
 elif [[ $curals == "0" ]]; then
 	$BUSYBOX echo "ALS is currently disabled"
 fi
+
 sleep 4
 $BUSYBOX echo ""
 $BUSYBOX echo "[*] Disabling ALS"
@@ -799,6 +806,7 @@ $BUSYBOX echo "    boot by creating an init.d script"
 $BUSYBOX echo ""
 $BUSYBOX echo "      (default = NO        y = create init.d)"
 read reup
+
 if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
 	$BUSYBOX clear
 	$BUSYBOX mount -o remount rw /system
@@ -836,7 +844,7 @@ $BUSYBOX echo ""
 $BUSYBOX echo "[*] Enabling ALS.."
 $BUSYBOX echo 1 > /sys/devices/i2c-0/0-0040/leds/lcd-backlight/als/enable
 sleep 2
-$
+
 if [[ -f /system/etc/init.d/85lps_disableals ]]; then
 	$BUSYBOX mount -o remount rw /system
 	$BUSYBOX rm -f /system/etc/init.d/85lps_disableals
@@ -879,13 +887,14 @@ $BUSYBOX echo "    boot by creating an init.d script"
 $BUSYBOX echo ""
 $BUSYBOX echo "      (default = NO        y = create init.d)"
 read reup
+
 if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
 	$BUSYBOX clear
 	$BUSYBOX mount -o remount rw /system
 		if [[ -f /system/etc/init.d/86lps_disablebled ]]; then
 			$BUSYBOX rm -f /system/etc/init.d/86lps_disablebled
 		fi
-	$BUSYBOX echo "#!$BUSYBOX sh" >> /system/etc/init.d/85lps_disablebled
+	$BUSYBOX echo "#!$BUSYBOX sh" >> /system/etc/init.d/86lps_disablebled
 	$BUSYBOX echo "" >> /system/etc/init.d/86lps_disablebled
 	$BUSYBOX echo "echo 1 > /sys/devices/i2c-0/0-0040/leds/button-backlight/max_current" >> /system/etc/init.d/86lps_disablebled
 	$BUSYBOX chmod 0755 /system/etc/init.d/86lps_disablebled
@@ -893,6 +902,7 @@ if [[ "$reup" == "y" ]] || [[ "$reup" == "Y" ]]; then
 	$BUSYBOX echo "[*] 86lps_disablebled Init.d created.."
 	sleep 1
 fi
+
 $BUSYBOX echo "[*] Returning to menu..."
 als_led_menu
 }
@@ -907,22 +917,26 @@ $BUSYBOX echo ""
 $BUSYBOX echo "[ALS]"
 curbled=`cat /sys/devices/i2c-0/0-0040/leds/button-backlight/max_current`
 $BUSYBOX echo ""
+
 if [[ $curbled == "455" ]]; then
 	$BUSYBOX echo "Button Backlight is currently enabled"
 elif [[ $curbled == "1" ]]; then
 	$BUSYBOX echo "Button Backlight is currently disabled"
 fi
+
 sleep 4
 $BUSYBOX echo ""
 $BUSYBOX echo "[*] Enabling ALS.."
 $BUSYBOX echo 455 > /sys/devices/i2c-0/0-0040/leds/button-backlight/max_current
 sleep 2
+
 if [[ -f /system/etc/init.d/86lps_disablbled ]]; then
 	$BUSYBOX mount -o remount rw /system
 	$BUSYBOX rm -f /system/etc/init.d/86lps_disabled
 	$BUSYBOX mount -o remount ro /system
-	$BUSYBOX echo "[*] Removed 85lps_disablebled init.d"
+	$BUSYBOX echo "[*] Removed 86lps_disablebled init.d"
 fi
+
 $BUSYBOX echo ""
 sleep 2
 sync
@@ -967,7 +981,7 @@ sleep 2
 $BUSYBOX chmod 0755 /system/etc/init.d/76lps_frandom
 $BUSYBOX echo "[*] Frandom enabled"
 if [ -e /system/lib/modules/frandom.ko ]; then
-       insmod /system/lib/modules/frandom.ko
+       insmod /system/lib/modules/frandom.ko > /dev/null
        
        if [ -e /dev/frandom ] && [ "`lsmod | grep ^frandom`" ]; then
 
@@ -1032,9 +1046,9 @@ $BUSYBOX echo ""
 $BUSYBOX echo "Available Frequencies----"
 $BUSYBOX echo "$listfreq"
 $BUSYBOX echo ""
-$BUSYBOX echo -n "Select new MAX frequency:  "; read newmaxfreq; sync; if [[ $newmaxfreq == "768000" || $newmaxfreq == "806400" || $newmaxfreq == "921600" || $newmaxfreq == "1017600" || $newmaxfreq == "1113600" || $newmaxfreq == "1209600" || $newmaxfreq == "1305600" || $newmaxfreq == "1401600" || $newmaxfreq == "1516800" || $newmaxfreq == "1612800" || $newmaxfreq == "1708800" || $newmaxfreq == "1804800" ]]; then $BUSYBOX echo "$newmaxfreq" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq; sync; echo "MAX freq = $newmaxfreq"; else echo "If you want to set max frequency"; echo "below 768000, then use a CPU app";  sleep 3; $BUSYBOX clear; selcpufreq; fi 
+$BUSYBOX echo -n "Select new MAX frequency:  "; read newmaxfreq; sync; if [[ $newmaxfreq == "768000" || $newmaxfreq == "806400" || $newmaxfreq == "921600" || $newmaxfreq == "1017600" || $newmaxfreq == "1113600" || $newmaxfreq == "1209600" || $newmaxfreq == "1305600" || $newmaxfreq == "1401600" || $newmaxfreq == "1516800" || $newmaxfreq == "1612800" || $newmaxfreq == "1708800" || $newmaxfreq == "1804800" ]]; then $BUSYBOX echo "$newmaxfreq" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq; sync; echo "MAX freq = $newmaxfreq"; elif [[ $newmaxfreq == "q" || $newmaxfreq == "Q" || $newmaxfreq == "r" || $newmaxfreq == "R" ]]; then performance_menu; else echo "If you want to set max frequency"; echo "below 768000, then use a CPU app";  sleep 3; $BUSYBOX clear; selcpufreq; fi 
 $BUSYBOX echo ""
-$BUSYBOX echo -n "Select new MIN frequency:  "; read newminfreq; sync; if [[ $newminfreq == "134400" || $newminfreq == "184320" || $newminfreq == "249600" || $newminfreq == "364800" || $newminfreq == "460800" || $newminfreq == "57600" || $newminfreq == "652800" || $newminfreq == "768000" || $newminfreq == "806400" || $newminfreq == "921600" || $newminfreq == "1017600" ]]; then $BUSYBOX echo "$newminfreq" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq; sync; echo "MIN freq = $newminfreq"; else echo "If you want to set min frequency"; echo "above 1017600, then use a CPU app"; sleep 3; $BUSYBOX clear; selcpufreq; fi
+$BUSYBOX echo -n "Select new MIN frequency:  "; read newminfreq; sync; if [[ $newminfreq == "134400" || $newminfreq == "184320" || $newminfreq == "249600" || $newminfreq == "364800" || $newminfreq == "460800" || $newminfreq == "57600" || $newminfreq == "652800" || $newminfreq == "768000" || $newminfreq == "806400" || $newminfreq == "921600" || $newminfreq == "1017600" ]]; then $BUSYBOX echo "$newminfreq" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq; sync; echo "MIN freq = $newminfreq"; elif [[ $newminfreq == "q" || $newminfreq == "Q" || $newminfreq == "r" || $newminfreq == "R" ]]; then performance_menu; else echo "If you want to set min frequency"; echo "above 1017600, then use a CPU app"; sleep 3; $BUSYBOX clear; selcpufreq; fi
 $BUSYBOX mount -o remount ro /system
 sleep 2
 sync
@@ -1081,7 +1095,7 @@ $BUSYBOX echo "Available Governors----"
 $BUSYBOX echo ""
 $BUSYBOX echo "$listgov"
 $BUSYBOX echo ""
-$BUSYBOX echo -n "Select new Governor:  "; read newgov; if grep -F "$newgov" /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors > /dev/null; then $BUSYBOX echo "$newgov" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor; echo "New governor = $newgov"; sleep 1.8; else $BUSYBOX echo "[e] $newgov is not a valid governor"; sleep 3; selgov; fi 
+$BUSYBOX echo -n "Select new Governor:  "; read newgov; if grep -F "$newgov" /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors > /dev/null; then $BUSYBOX echo "$newgov" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor; echo "New governor = $newgov"; sleep 1.8; elif [[ $newgov == "q" || $newgov == "Q" || $newgov == "r" || $newio == "R" ]]; then performance_menu; else $BUSYBOX echo "[e] $newgov is not a valid governor"; sleep 3; selgov; fi 
 $BUSYBOX echo ""
 $BUSYBOX mount -o remount ro /system
 sleep 2
@@ -1126,7 +1140,7 @@ $BUSYBOX echo "Available Io-Schedulers----"
 $BUSYBOX echo ""
 $BUSYBOX echo "$listio"
 $BUSYBOX echo ""
-$BUSYBOX echo -n "Select new IO-Scheduler:  "; read newio;  if [[ $newio == "noop" || $newio == "anticipatory" || $newio == "deadline" || $newio == "cfq" || $newio == "bfq" || $newio == "sio" || $newio == "vr" || $newio == "zen" ]]; then $BUSYBOX echo "$newio" > /sys/block/mmcblk0/queue/scheduler; sync; echo "New io-scheduler = $newio"; else echo "$newio is not a valid scheduler"; sleep 3; $BUSYBOX clear; seliosched; fi 
+$BUSYBOX echo -n "Select new IO-Scheduler:  "; read newio;  if [[ $newio == "noop" || $newio == "anticipatory" || $newio == "deadline" || $newio == "cfq" || $newio == "bfq" || $newio == "sio" || $newio == "vr" || $newio == "zen" ]]; then $BUSYBOX echo "$newio" > /sys/block/mmcblk0/queue/scheduler; sync; echo "New io-scheduler = $newio"; elif [[ $newio == "q" || $newio == "Q" || $newio == "r" || $newio == "R" ]]; then performance_menu; else echo "$newio is not a valid scheduler"; sleep 3; $BUSYBOX clear; seliosched; fi 
 $BUSYBOX echo ""
 $BUSYBOX mount -o remount ro /system
 sleep 2
@@ -1187,6 +1201,8 @@ elif [[ $reup == "a" ]]; then
 	$BUSYBOX clear
 	$BUSYBOX echo "[*] All LuPuS set init.d's have been removed"
 	sleep 2.8
+elif [[ $reup == "Q" || $reup == "q" || $reup == "R" || $reup == "r" ]]; then
+main_menu_opt
 fi
 
 sleep 2.4
@@ -1265,6 +1281,8 @@ $BUSYBOX echo ""
 if [[ $newdirbakat -ge "0" && $newdirbakat -le "100" ]]; then
 	$BUSYBOX echo $newdirbakat > /proc/sys/vm/dirty_background_ratio
 	$BUSYBOX echo "New dirty background ratio value set at: $newdirbakat"
+elif [[ $newdirbakat == "Q" || $newdirbakat == "q" || $newdirbakat == "R" || $newdirbakat == "r" ]]; then
+	performance_menu 
 else
 	$BUSYBOX echo "Your value must be between 0 - 100"
 	dirbakat
@@ -1864,15 +1882,15 @@ $BUSYBOX echo ""
 $BUSYBOX echo "              Enter option ---"
 $BUSYBOX echo ""
 $BUSYBOX echo ""
-$BUSYBOX echo "             1/ View LuPuS Kernel OP"
+$BUSYBOX echo "             1/ View LuPuS Kernel Changelog"
 $BUSYBOX echo "             2/ View Menu Info"
 $BUSYBOX echo "             3/ Donate to me :) "
 $BUSYBOX echo ""
 $BUSYBOX echo "             R/ Return to main menu"
 read num
 case $num in
-	1) $BUSYBOX clear; su -c "LD_LIBRARY_PATH=/vendor/lib:/system/lib am start http://goo.gl/zaX4g"; main_menu_opt;;
-	2) $BUSYBOX clear; su -c "LD_LIBRARY_PATH=/vendor/lib:/system/lib am start http://goo.gl/XltIY"; main_menu_opt;;
+	1) $BUSYBOX clear; su -c "LD_LIBRARY_PATH=/vendor/lib:/system/lib am start http://goo.gl/82Jiw"; main_menu_opt;;
+	2) $BUSYBOX clear; su -c "LD_LIBRARY_PATH=/vendor/lib:/system/lib am start http://goo.gl/u6Gf8"; main_menu_opt;;
 	3) $BUSYBOX clear; su -c "LD_LIBRARY_PATH=/vendor/lib:/system/lib am start http://goo.gl/5896I"; main_menu_opt;;
 	r|R) $BUSYBOX clear; main_menu_opt;;
 	*) $BUSYBOX echo "$num is not a valid option"; sleep 3; $BUSYBOX clear; cifs_menu;

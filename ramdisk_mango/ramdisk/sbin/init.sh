@@ -136,10 +136,6 @@ $BUSYBOX pkill -f "$BUSYBOX cat ${BOOTREC_EVENT}"
 # unpack the ramdisk image
 $BUSYBOX lzcat ${load_image} | $BUSYBOX cpio -i 2>&1 >> /lupus.log
 
-# create init links
-cd sbin
-source init-links.sh
-cd ..
 
 # unmount filesystems
 $BUSYBOX umount /system
