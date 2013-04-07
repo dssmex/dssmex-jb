@@ -103,10 +103,9 @@ static struct cpufreq_frequency_table freq_table[] = {
 	#else
 	{ 17, 1708800 },
 	{ 18, 1804800 },
-	{ 19, CPUFREQ_TABLE_END },
-	/*{ 19, 1900800 },
+	{ 19, 1900800 },
 	{ 20, 2016000 },
-	{ 21, CPUFREQ_TABLE_END },*/
+	{ 21, CPUFREQ_TABLE_END },
 	#endif
 };
 
@@ -150,8 +149,8 @@ static struct clkctl_acpu_speed acpu_freq_tbl[] = {
 	#else
 	{ 1708800, PLL_2,   3, 0,  UINT_MAX, 1350, VDD_RAW(1350) },
 	{ 1804800, PLL_2,   3, 0,  UINT_MAX, 1400, VDD_RAW(1400) },
-	/*{ 1900800, PLL_2,   3, 0,  UINT_MAX, 1450, VDD_RAW(1450) },
-	{ 2016000, PLL_2,   3, 0,  UINT_MAX, 1500, VDD_RAW(1500) },*/
+	{ 1900800, PLL_2,   3, 0,  UINT_MAX, 1450, VDD_RAW(1450) },
+	{ 2016000, PLL_2,   3, 0,  UINT_MAX, 1500, VDD_RAW(1500) },
 	{ 0 }
 	#endif 
 };
