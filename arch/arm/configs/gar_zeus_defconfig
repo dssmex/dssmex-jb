@@ -1185,7 +1185,7 @@ CONFIG_WLAN=y
 # CONFIG_LIBRA_SDIOIF is not set
 # CONFIG_SEMC_ZEUS_WLAN is not set
 CONFIG_BCM4329=m
-CONFIG_BCM4329_FW_PATH="/system/ect/firmware/fw_bcm4329.bin"
+CONFIG_BCM4329_FW_PATH="/system/etc/firmware/fw_bcm4329.bin"
 CONFIG_BCM4329_NVRAM_PATH="/system/etc/wifi/calibration"
 
 #
