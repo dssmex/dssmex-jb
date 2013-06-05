@@ -1179,8 +1179,6 @@ CONFIG_BCM4329_NVRAM_PATH="/system/etc/wifi/calibration"
 #
 # Enable WiMAX (Networking options) to see the WiMAX drivers
 #
-# CONFIG_WAN is not set
-CONFIG_PPP=y
 # CONFIG_PPP_MULTILINK is not set
 # CONFIG_PPP_FILTER is not set
 CONFIG_PPP_ASYNC=y
@@ -1192,19 +1190,6 @@ CONFIG_PPP_MPPE=y
 # CONFIG_PPPOL2TP is not set
 CONFIG_PPPOLAC=y
 CONFIG_PPPOPNS=y
-CONFIG_SLIP=y
-CONFIG_SLIP_COMPRESSED=y
-CONFIG_SLHC=y
-# CONFIG_SLIP_SMART is not set
-CONFIG_SLIP_MODE_SLIP6=y
-# CONFIG_NETCONSOLE is not set
-CONFIG_MSM_RMNET=y
-CONFIG_MSM_RMNET_SDIO=y
-# CONFIG_MSM_RMNET_DEBUG is not set
-# CONFIG_NETPOLL is not set
-# CONFIG_NET_POLL_CONTROLLER is not set
-# CONFIG_ISDN is not set
-# CONFIG_PHONE is not set
 
 #
 # USB Network Adapters
